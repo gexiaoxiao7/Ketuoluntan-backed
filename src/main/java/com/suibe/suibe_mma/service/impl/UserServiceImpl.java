@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
+import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -22,7 +23,7 @@ import java.util.regex.Pattern;
 @Transactional(rollbackFor = {UserException.class})
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    @Autowired
+    @Resource
     private UserMapper userMapper;
 
     @Override
@@ -140,7 +141,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param originUser 原始用户信息
      * @return 安全用户信息
      */
-    private User getSafetyUser(User originUser) {
+    public User getSafetyUser(User originUser) {
         User safetyUser = new User();
         safetyUser.setId(originUser.getId());
         safetyUser.setUsername(originUser.getUsername());

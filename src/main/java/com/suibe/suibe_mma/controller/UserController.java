@@ -6,18 +6,16 @@ import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
-    @Autowired
+    @Resource
     private UserService userService;
 
     /**
@@ -65,5 +63,18 @@ public class UserController {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
+    }
+
+    @GetMapping("/current")
+    public User getCurrentUser(HttpServletRequest request){
+        Object userObject = request.getSession().getAttribute(UserService.USER_LOGIN_STATE);
+        User currentUser = (User) userObject;
+        if(currentUser == null){
+            return null;
+        }
+        long userId = currentUser.getId();
+        // todo 校验用户是否合法
+        User user = userService.getById(userId);
+        return userService.getSafetyUser(user);
     }
 }

@@ -24,4 +24,12 @@ public interface UserService extends IService<User> {
      * @throws UserException 格式不符、用户不存在
      */
     User login(UserLoginRequest userLoginRequest) throws UserException;
+
+    /**
+     * 用户脱敏
+     *
+     * @param originUser 未脱敏用户信息
+     * @return safetyUser
+     */
+    User getSafetyUser(User originUser);
 }
