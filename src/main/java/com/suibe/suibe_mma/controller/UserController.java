@@ -81,7 +81,9 @@ public class UserController {
         User currentUser = (User) originUser;
         User getUser = userService.getById(currentUser.getId());
         try {
-            return userService.checkCurrentUser(getUser, currentUser);
+            User safetyUser = userService.checkCurrentUser(getUser, currentUser);
+            session.setAttribute("errMsg", null);
+            return safetyUser;
         } catch (UserException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
