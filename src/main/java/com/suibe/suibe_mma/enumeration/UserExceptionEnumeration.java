@@ -1,0 +1,10 @@
+package com.suibe.suibe_mma.enumeration;
+
+public enum  UserExceptionEnumeration {
+    USER_ACCOUNT_NOT_EXISTS,
+    USER_ACCOUNT_OR_PASSWORD_WRONG,
+    USER_ACCOUNT_EXISTS,
+    USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG,
+    USER_INSERT_FAILED,
+    USER_PASSWORD_NOT_EQUALS_CHECKPASSWORD
+}
