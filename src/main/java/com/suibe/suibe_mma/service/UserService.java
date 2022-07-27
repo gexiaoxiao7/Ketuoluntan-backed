@@ -26,10 +26,11 @@ public interface UserService extends IService<User> {
     User login(UserLoginRequest userLoginRequest) throws UserException;
 
     /**
-     * 用户脱敏
-     *
-     * @param originUser 未脱敏用户信息
-     * @return safetyUser
+     * 获取当前登录用户
+     * @param getUser 数据库获取的用户信息
+     * @param currentUser session域中获取的用户信息
+     * @return 用户信息
+     * @throws UserException 数据库中无此用户、用户信息不一致
      */
-    User getSafetyUser(User originUser);
+    User checkCurrentUser(User getUser, User currentUser) throws UserException;
 }

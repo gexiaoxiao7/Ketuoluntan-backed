@@ -5,7 +5,6 @@ import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -65,16 +64,27 @@ public class UserController {
         }
     }
 
+    /**
+     * 获取当前登录用户
+     * 如果用户信息不一致或根据id查询不到会将错误保存到session域中
+     * @param request 请求域对象
+     * @return 用户信息
+     */
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request){
-        Object userObject = request.getSession().getAttribute(UserService.USER_LOGIN_STATE);
-        User currentUser = (User) userObject;
-        if(currentUser == null){
+    public User getCurrentUser(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        Object originUser = session.getAttribute(UserService.USER_LOGIN_STATE);
+        if (originUser == null) {
+            session.setAttribute("errMsg", "无用户登录");
             return null;
         }
-        long userId = currentUser.getId();
-        // todo 校验用户是否合法
-        User user = userService.getById(userId);
-        return userService.getSafetyUser(user);
+        User currentUser = (User) originUser;
+        User getUser = userService.getById(currentUser.getId());
+        try {
+            return userService.checkCurrentUser(getUser, currentUser);
+        } catch (UserException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
     }
 }

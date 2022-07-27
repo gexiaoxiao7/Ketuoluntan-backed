@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -71,6 +73,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } else {
             throw UserException.getInstance(UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG);
         }
+    }
+
+    @Override
+    public User checkCurrentUser(User getUser, User currentUser) throws UserException {
+        if (getUser == null) {
+            throw UserException.getInstance(UserExceptionEnumeration.USER_ACCOUNT_NOT_EXISTS);
+        }
+        if (!getUser.equals(currentUser)) {
+            throw UserException.getInstance(UserExceptionEnumeration.USER_INFORMATION_WRONG);
+        }
+        return getSafetyUser(currentUser);
+    }
+
+    /**
+     * 用户脱敏
+     *
+     * @param originUser 未脱敏用户信息
+     * @return safetyUser
+     */
+    private User getSafetyUser(User originUser) {
+        User safetyUser = new User();
+        safetyUser.setId(originUser.getId());
+        safetyUser.setUsername(originUser.getUsername());
+        safetyUser.setUserAccount(originUser.getUserAccount());
+        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
+        safetyUser.setCreateTime(originUser.getCreateTime());
+        safetyUser.setEmail(originUser.getEmail());
+        safetyUser.setGender(originUser.getGender());
+        safetyUser.setScore(originUser.getScore());
+        safetyUser.setUserRole(originUser.getUserRole());
+        return safetyUser;
     }
 
     /**
@@ -134,24 +167,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     private boolean isUserExist(String userAccount) {
         return userMapper.selectByUserAccount(userAccount) > 0;
-    }
-
-    /**
-     * 获取安全用户信息
-     * @param originUser 原始用户信息
-     * @return 安全用户信息
-     */
-    public User getSafetyUser(User originUser) {
-        User safetyUser = new User();
-        safetyUser.setId(originUser.getId());
-        safetyUser.setUsername(originUser.getUsername());
-        safetyUser.setUserAccount(originUser.getUserAccount());
-        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
-        safetyUser.setCreateTime(originUser.getCreateTime());
-        safetyUser.setEmail(originUser.getEmail());
-        safetyUser.setGender(originUser.getGender());
-        safetyUser.setScore(originUser.getScore());
-        safetyUser.setUserRole(originUser.getUserRole());
-        return safetyUser;
     }
 }

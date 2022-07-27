@@ -30,6 +30,8 @@ public class UserException extends RuntimeException {
                 return new UserException("用户信息添加失败", e);
             case USER_PASSWORD_NOT_EQUALS_CHECKPASSWORD:
                 return new UserException("密码与校验码不一致", e);
+            case USER_INFORMATION_WRONG:
+                return new UserException("用户信息不一致", e);
             default:
                 return new UserException("默认用户异常", e);
         }
