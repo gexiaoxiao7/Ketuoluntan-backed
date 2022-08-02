@@ -20,7 +20,7 @@ public enum  UserExceptionEnumeration {
     /**
      * 异常信息
      */
-    private String message;
+    private final String message;
 
     /**
      * 异常信息构造器
