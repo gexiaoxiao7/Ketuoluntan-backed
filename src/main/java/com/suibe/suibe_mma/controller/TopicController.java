@@ -31,7 +31,7 @@ public class TopicController {
     @Resource
     private TopicService topicService;
 
-    private Lock lock = new ReentrantLock();
+    private final Lock lock = new ReentrantLock();
 
     /**
      * 上传题目控制方法
