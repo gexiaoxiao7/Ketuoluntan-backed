@@ -7,6 +7,9 @@ import lombok.EqualsAndHashCode;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 用户信息类
+ */
 @Data
 @EqualsAndHashCode(exclude = {"userPassword", "isDelete", "updateTime"})
 @TableName("mma_user")

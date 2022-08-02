@@ -11,9 +11,15 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+/**
+ * 用户相关操作控制类
+ */
 @RestController
 @RequestMapping("/user")
 public class UserController {
+    /**
+     * 注入UserService
+     */
     @Resource
     private UserService userService;
 
@@ -84,6 +90,46 @@ public class UserController {
             User safetyUser = userService.checkCurrentUser(getUser, currentUser);
             session.setAttribute("errMsg", null);
             return safetyUser;
+        } catch (UserException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 用户信息更新
+     * @param user 需要更新的用户信息
+     * @param request 请求域对象
+     * @return 更新后的用户信息
+     */
+    @PostMapping("/update")
+    public User updateUserInfo(@RequestBody User user, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        User originUser = (User) session.getAttribute(UserService.USER_LOGIN_STATE);
+        if (user == null) {
+            session.setAttribute("errMsg", "请求失败");
+            return null;
+        }
+        if (originUser == null) {
+            session.setAttribute("errMsg", "用户未登录");
+            return null;
+        }
+        if (originUser.equals(user)) {
+            session.setAttribute("errMsg", "用户信息无变动");
+            return null;
+        }
+        if (user.getUserPassword() != null) {
+            session.setAttribute("errMsg", "该功能不提供修改密码需求");
+            return null;
+        }
+        if (user.getId() == null) {
+            session.setAttribute("errMsg", "用户信息唯一标识缺失");
+        }
+        try {
+            User userInfo = userService.updateUserInfo(user);
+            session.setAttribute("errMsg", null);
+            session.setAttribute(UserService.USER_LOGIN_STATE, userInfo);
+            return userInfo;
         } catch (UserException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
