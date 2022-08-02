@@ -33,4 +33,21 @@ public interface UserService extends IService<User> {
      * @throws UserException 数据库中无此用户、用户信息不一致
      */
     User checkCurrentUser(User getUser, User currentUser) throws UserException;
+
+    /**
+     * 更新用户信息，除了密码等重要信息
+     * @param user 用户需要更新信息
+     * @return 用户更新信息后的用户信息
+     * @throws UserException 更新失败
+     */
+    User updateUserInfo(User user) throws UserException;
+
+    /**
+     * 根据用户id，增加用户积分
+     * @param user 用户信息
+     * @param score 用户积分
+     * @return 更新后用户信息
+     * @throws UserException 增加用户积分失败
+     */
+    User changeScore(User user, Integer score) throws UserException;
 }

@@ -1,9 +1,11 @@
 package com.suibe.suibe_mma;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.suibe.suibe_mma.exception.UserException;
+import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
+import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ class SuibeMmaApplicationTests {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TopicService topicService;
+
     @Test
     void contextLoads() {
         UpdateWrapper<User> wrapper = new UpdateWrapper<>();
@@ -30,7 +35,32 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test() {
-        System.out.println("?".matches("\\pP"));
+        User userInfo = userService.getById(2);
+        userInfo.setUsername("test23");
+        userInfo.setUpdateTime(null);
+        userService.updateById(userInfo);
+    }
+
+    @Test
+    void test2() {
+        UserLoginRequest userLoginRequest = new UserLoginRequest();
+        userLoginRequest.setUserAccount("12345679");
+        userLoginRequest.setUserPassword("CC123456");
+        User login = userService.login(userLoginRequest);
+        System.out.println(login);
+    }
+
+    @Test
+    void test3() {
+        TopicUploadRequest topicUploadRequest = new TopicUploadRequest();
+        topicUploadRequest.setUserId(1);
+        topicUploadRequest.setTopicTitle("test2");
+        topicService.upload(topicUploadRequest);
+    }
+
+    @Test
+    void test4() {
+
     }
 
 }

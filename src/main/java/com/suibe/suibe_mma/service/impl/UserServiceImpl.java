@@ -1,6 +1,7 @@
 package com.suibe.suibe_mma.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
@@ -15,7 +16,6 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -37,16 +37,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 if (!isUserExist(user)) {
                     user.setUserPassword(encrypt(userPassword));
                     if (!save(user)) {
-                        throw UserException.getInstance(UserExceptionEnumeration.USER_INSERT_FAILED);
+                        UserExceptionEnumeration.USER_INSERT_FAILED.throwUserException();
                     }
                 } else {
-                    throw UserException.getInstance(UserExceptionEnumeration.USER_ACCOUNT_EXISTS);
+                    UserExceptionEnumeration.USER_ACCOUNT_EXISTS.throwUserException();
                 }
             } else {
-                throw UserException.getInstance(UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECKPASSWORD);
+                UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECKPASSWORD.throwUserException();
             }
         } else {
-            throw UserException.getInstance(UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG);
+            UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG.throwUserException();
         }
     }
 
@@ -54,33 +54,62 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User login(UserLoginRequest userLoginRequest) throws UserException {
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
-        if (checkUserAccount(userAccount) || checkUserPassword(userPassword)) {
+        if (checkUserAccount(userAccount) && checkUserPassword(userPassword)) {
             if (isUserExist(userAccount)) {
                 QueryWrapper<User> wrapper = new QueryWrapper<>();
-                wrapper.eq("userAccount", userAccount);
-                wrapper.eq("userPassword", encrypt(userPassword));
-                List<User> list = list(wrapper);
-                if (list.isEmpty()) {
-                    throw UserException.getInstance(UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_WRONG);
+                wrapper
+                        .eq("userAccount", userAccount)
+                        .eq("userPassword", encrypt(userPassword));
+                User user = getOne(wrapper);
+                if (user == null) {
+                    UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_WRONG.throwUserException();
                 }
-                return getSafetyUser(list.get(0));
+                return getSafetyUser(user);
             } else {
-                throw UserException.getInstance(UserExceptionEnumeration.USER_ACCOUNT_NOT_EXISTS);
+                UserExceptionEnumeration.USER_ACCOUNT_NOT_EXISTS.throwUserException();
             }
         } else {
-            throw UserException.getInstance(UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG);
+            UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG.throwUserException();
         }
+        return null;
     }
 
     @Override
     public User checkCurrentUser(User getUser, User currentUser) throws UserException {
         if (getUser == null) {
-            throw UserException.getInstance(UserExceptionEnumeration.USER_ACCOUNT_NOT_EXISTS);
+            UserExceptionEnumeration.USER_ACCOUNT_NOT_EXISTS.throwUserException();
         }
         if (!getUser.equals(currentUser)) {
-            throw UserException.getInstance(UserExceptionEnumeration.USER_INFORMATION_WRONG);
+            UserExceptionEnumeration.USER_INFORMATION_WRONG.throwUserException();
         }
         return getSafetyUser(currentUser);
+    }
+
+    @Override
+    public User updateUserInfo(User user) throws UserException {
+        User userInfo = getById(user.getId());
+        if (userInfo == null) {
+            UserExceptionEnumeration.USER_ID_WRONG.throwUserException();
+            return null;
+        }
+        boolean flag = updateById(user);
+        if (flag) {
+            return getSafetyUser(user);
+        }
+        UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
+        return null;
+    }
+
+    @Override
+    public User changeScore(User user, Integer score) throws UserException {
+        User safetyUser = getSafetyUser(user);
+        safetyUser.setScore(safetyUser.getScore() + score);
+        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+        wrapper.eq("id", safetyUser.getId());
+        if (!update(safetyUser, wrapper)) {
+            UserExceptionEnumeration.USER_SCORE_UPDATE_FAILED.throwUserException();
+        }
+        return safetyUser;
     }
 
     /**
