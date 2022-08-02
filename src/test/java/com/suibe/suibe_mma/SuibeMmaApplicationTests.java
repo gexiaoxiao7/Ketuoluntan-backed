@@ -1,8 +1,12 @@
 package com.suibe.suibe_mma;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
+import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.service.TopicService;
@@ -10,8 +14,10 @@ import com.suibe.suibe_mma.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
+import java.util.concurrent.locks.ReentrantLock;
 
 @SpringBootTest
 class SuibeMmaApplicationTests {
@@ -24,6 +30,9 @@ class SuibeMmaApplicationTests {
 
     @Autowired
     private TopicService topicService;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     void contextLoads() {
@@ -60,7 +69,15 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test4() {
-
+        Page<Topic> page = new Page<>();
+        page.setSize(10L);
+        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("topicLikes");
+        Page<Topic> page1 = topicService.page(page, wrapper);
+        System.out.println(page1.getSize());
+        System.out.println(page1.getTotal());
+        System.out.println(page1.getPages());
+        page1.getRecords().forEach(System.out::println);
     }
 
 }

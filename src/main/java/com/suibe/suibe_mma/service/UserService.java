@@ -7,7 +7,14 @@ import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.domain.User;
 
 public interface UserService extends IService<User> {
+    /**
+     * 加密盐值
+     */
     String SALT = "suibe_mma";
+
+    /**
+     * 用户登录状态
+     */
     String USER_LOGIN_STATE = "userLoginState";
 
     /**
