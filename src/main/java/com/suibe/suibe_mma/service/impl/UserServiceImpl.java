@@ -94,7 +94,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         boolean flag = updateById(user);
         if (flag) {
-            return getSafetyUser(user);
+            User newUser = getById(user.getId());
+            return getSafetyUser(newUser);
         }
         UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
         return null;
