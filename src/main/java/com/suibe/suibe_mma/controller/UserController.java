@@ -97,6 +97,22 @@ public class UserController {
     }
 
     /**
+     * 根据用户ID当获取脱敏用户信息
+     * @param userId 用户Id
+     * @return 用户信息
+     */
+    @GetMapping("/searchByUserId")
+    public User searchByUserId(@RequestBody Integer userId,HttpServletRequest request ) {
+        HttpSession session = request.getSession();
+        User getUser = userService.getById(userId);
+        if(getUser == null){
+            session.setAttribute("errMsg","请求失败");
+            return null;
+        }
+        return userService.checkCurrentUser(getUser,getUser);
+    }
+
+    /**
      * 用户信息更新
      * @param user 需要更新的用户信息
      * @param request 请求域对象

@@ -29,4 +29,5 @@ public interface TopicService extends IService<Topic> {
      * @throws TopicException id为空或无效、点赞更新失败、topicId为空或无效
      */
     Topic like(Integer topicId, Integer id) throws TopicException;
+
 }

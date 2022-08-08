@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
@@ -14,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 /**
  * 题目相关操作控制类
@@ -85,8 +88,8 @@ public class TopicController {
      * @param current 当前页，1开始
      * @return 题目列表
      */
-    @PostMapping("/getTopic/{current}")
-    public List<Topic> getTopic(@PathVariable("current") long current) {
+    @PostMapping("/getTopic{current}")
+    public List<Topic> getTopic(long current) {
         IPage<Topic> page = new Page<>();
         page.setCurrent(current);
         page.setSize(10L);
@@ -109,5 +112,14 @@ public class TopicController {
         long pages = topicIPage.getPages();
         request.getSession().setAttribute(TopicService.TOPIC_TOTAL_PAGES, pages);
         return pages;
+    }
+
+    /**
+     * 获取所有题目信息
+     */
+    @PostMapping("/getTotalTopics")
+    public List<Topic> getTotalTopics(){
+        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
+        return topicService.list(wrapper);
     }
 }
