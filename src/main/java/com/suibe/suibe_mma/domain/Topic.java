@@ -41,7 +41,7 @@ public class Topic implements Serializable {
      * 题目是否被选为精选
      */
     @TableField("isStared")
-    private Boolean isStared;
+    private String isStared;
 
     /**
      * 创建时间

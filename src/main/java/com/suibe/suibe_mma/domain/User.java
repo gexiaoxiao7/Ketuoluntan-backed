@@ -47,7 +47,7 @@ public class User implements Serializable {
     /**
      * 用户性别
      */
-    private Boolean gender;
+    private String gender;
 
     /**
      * 用户邮箱
