@@ -81,33 +81,10 @@ public class TopicController {
     }
 
     /**
-     * 获取某一页中的题目
-     * @param current 当前页，1开始
-     * @return 题目列表
+     * 获取所有题目信息
      */
-    @PostMapping("/getTopic/{current}")
-    public List<Topic> getTopic(@PathVariable("current") long current) {
-        IPage<Topic> page = new Page<>();
-        page.setCurrent(current);
-        page.setSize(10L);
-        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
-        wrapper.orderByDesc("topicLikes");
-        return topicService.page(page, wrapper).getRecords();
-    }
-
-    /**
-     * 获取题目总页数
-     * @param request 请求域对象
-     * @return 题目总页数
-     */
-    @PostMapping("/getTopicTotalPages")
-    public Long getTopicTotalPages(HttpServletRequest request) {
-        IPage<Topic> page = new Page<>();
-        page.setSize(10L);
-        page.setCurrent(1L);
-        IPage<Topic> topicIPage = topicService.page(page);
-        long pages = topicIPage.getPages();
-        request.getSession().setAttribute(TopicService.TOPIC_TOTAL_PAGES, pages);
-        return pages;
+    @PostMapping("/getTopicTotal")
+    public List<Topic> getTopicTotal() {
+        return topicService.list();
     }
 }

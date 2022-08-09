@@ -69,15 +69,7 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test4() {
-        Page<Topic> page = new Page<>();
-        page.setSize(10L);
-        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
-        wrapper.orderByDesc("topicLikes");
-        Page<Topic> page1 = topicService.page(page, wrapper);
-        System.out.println(page1.getSize());
-        System.out.println(page1.getTotal());
-        System.out.println(page1.getPages());
-        page1.getRecords().forEach(System.out::println);
+
     }
 
 }
