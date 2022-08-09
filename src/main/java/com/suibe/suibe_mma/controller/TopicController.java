@@ -83,8 +83,8 @@ public class TopicController {
     /**
      * 获取所有题目信息
      */
-    @PostMapping("/getTopicTotal")
-    public List<Topic> getTopicTotal() {
+    @PostMapping("/getTotalTopic")
+    public List<Topic> getTotalTopic() {
         return topicService.list();
     }
 }
