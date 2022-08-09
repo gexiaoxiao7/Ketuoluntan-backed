@@ -69,7 +69,7 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test4() {
-        topicService.list().forEach(System.out::println);
+
     }
 
 }

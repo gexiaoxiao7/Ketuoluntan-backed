@@ -31,7 +31,7 @@ public class TopicController {
     @Resource
     private TopicService topicService;
 
-    private final Lock lock = new ReentrantLock();
+    private Lock lock = new ReentrantLock();
 
     /**
      * 上传题目控制方法
@@ -81,42 +81,10 @@ public class TopicController {
     }
 
     /**
-     * 获取某一页中的题目
-     * @param current 当前页，1开始
-     * @return 题目列表
-     */
-    @PostMapping("/getTopic")
-    public List<Topic> getTopic(long current) {
-        IPage<Topic> page = new Page<>();
-        page.setCurrent(current);
-        page.setSize(10L);
-        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
-        wrapper.orderByDesc("topicLikes");
-        return topicService.page(page, wrapper).getRecords();
-    }
-
-    /**
-     * 获取题目总页数
-     * @param request 请求域对象
-     * @return 题目总页数
-     */
-    @PostMapping("/getTopicTotalPages")
-    public Long getTopicTotalPages(HttpServletRequest request) {
-        IPage<Topic> page = new Page<>();
-        page.setSize(10L);
-        page.setCurrent(1L);
-        IPage<Topic> topicIPage = topicService.page(page);
-        long pages = topicIPage.getPages();
-        request.getSession().setAttribute(TopicService.TOPIC_TOTAL_PAGES, pages);
-        return pages;
-    }
-
-    /**
      * 获取所有题目信息
      */
-    @PostMapping("/getTotalTopics")
-    public List<Topic> getTotalTopics(){
-        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
-        return topicService.list(wrapper);
+    @PostMapping("/getTotalTopic")
+    public List<Topic> getTotalTopic() {
+        return topicService.list();
     }
 }
