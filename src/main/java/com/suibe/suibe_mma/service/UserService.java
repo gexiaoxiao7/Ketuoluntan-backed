@@ -6,6 +6,9 @@ import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.domain.User;
 
+/**
+ * 用户服务类接口
+ */
 public interface UserService extends IService<User> {
     /**
      * 加密盐值
@@ -34,12 +37,11 @@ public interface UserService extends IService<User> {
 
     /**
      * 获取当前登录用户
-     * @param getUser 数据库获取的用户信息
      * @param currentUser session域中获取的用户信息
      * @return 用户信息
      * @throws UserException 数据库中无此用户、用户信息不一致
      */
-    User checkCurrentUser(User getUser, User currentUser) throws UserException;
+    User checkCurrentUser(User currentUser) throws UserException;
 
     /**
      * 更新用户信息，除了密码等重要信息

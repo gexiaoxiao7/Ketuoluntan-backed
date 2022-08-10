@@ -85,9 +85,8 @@ public class UserController {
             return null;
         }
         User currentUser = (User) originUser;
-        User getUser = userService.getById(currentUser.getId());
         try {
-            User safetyUser = userService.checkCurrentUser(getUser, currentUser);
+            User safetyUser = userService.checkCurrentUser(currentUser);
             session.setAttribute("errMsg", null);
             return safetyUser;
         } catch (UserException e) {
@@ -105,11 +104,11 @@ public class UserController {
     @PostMapping("/update")
     public User updateUserInfo(@RequestBody User user, HttpServletRequest request) {
         HttpSession session = request.getSession();
-        User originUser = (User) session.getAttribute(UserService.USER_LOGIN_STATE);
         if (user == null) {
             session.setAttribute("errMsg", "请求失败");
             return null;
         }
+        User originUser = (User) session.getAttribute(UserService.USER_LOGIN_STATE);
         if (originUser == null) {
             session.setAttribute("errMsg", "用户未登录");
             return null;
@@ -122,9 +121,6 @@ public class UserController {
             session.setAttribute("errMsg", "该功能不提供修改密码需求");
             return null;
         }
-        if (user.getId() == null) {
-            session.setAttribute("errMsg", "用户信息唯一标识缺失");
-        }
         try {
             User userInfo = userService.updateUserInfo(user);
             session.setAttribute("errMsg", null);
@@ -134,5 +130,21 @@ public class UserController {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 用户退出登录
+     * @param request 请求域对象
+     * @return 提示消息
+     */
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (getCurrentUser(request) == null) {
+            return "用户未登录";
+        }
+        session.setAttribute(UserService.USER_LOGIN_STATE, null);
+        session.setAttribute("errMsg", null);
+        return "用户已退出";
     }
 }

@@ -6,12 +6,10 @@ import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.exception.TopicException;
 
+/**
+ * 题目服务类接口
+ */
 public interface TopicService extends IService<Topic> {
-
-    /**
-     * 题目总页数
-     */
-    String TOPIC_TOTAL_PAGES = "topicTotalPages";
 
     /**
      * 上传题目

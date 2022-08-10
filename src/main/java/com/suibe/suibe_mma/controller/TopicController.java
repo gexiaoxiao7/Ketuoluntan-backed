@@ -1,8 +1,6 @@
 package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
@@ -31,7 +29,10 @@ public class TopicController {
     @Resource
     private TopicService topicService;
 
-    private Lock lock = new ReentrantLock();
+    /**
+     * 定义一个锁
+     */
+    private final Lock lock = new ReentrantLock();
 
     /**
      * 上传题目控制方法
@@ -83,8 +84,10 @@ public class TopicController {
     /**
      * 获取所有题目信息
      */
-    @PostMapping("/getTotalTopic")
+    @GetMapping("/getTotalTopic")
     public List<Topic> getTotalTopic() {
-        return topicService.list();
+        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("topicLikes");
+        return topicService.list(wrapper);
     }
 }

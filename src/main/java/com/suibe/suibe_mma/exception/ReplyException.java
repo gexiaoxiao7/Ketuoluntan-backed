@@ -1,14 +1,14 @@
 package com.suibe.suibe_mma.exception;
 
 /**
- * 用户相关操作异常
+ * 回复异常类
  */
-public class UserException extends RuntimeException {
+public class ReplyException extends RuntimeException {
     /**
      * message构造方法
      * @param message 异常信息
      */
-    public UserException(String message) {
+    public ReplyException(String message) {
         super(message);
     }
 
@@ -17,7 +17,7 @@ public class UserException extends RuntimeException {
      * @param message 异常信息
      * @param e 来源异常
      */
-    public UserException(String message, Throwable e) {
+    public ReplyException(String message, Exception e) {
         super(message, e);
     }
 }

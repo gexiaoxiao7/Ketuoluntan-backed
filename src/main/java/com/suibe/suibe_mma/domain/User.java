@@ -11,7 +11,7 @@ import java.util.Date;
  * 用户信息类
  */
 @Data
-@EqualsAndHashCode(exclude = {"userPassword", "isDelete", "updateTime"})
+@EqualsAndHashCode(exclude = {"score"})
 @TableName("mma_user")
 public class User implements Serializable {
 
@@ -35,7 +35,7 @@ public class User implements Serializable {
     /**
      * 用户密码
      */
-    @TableField("userPassword")
+    @TableField(value = "userPassword", select = false)
     private String userPassword;
 
     /**
@@ -81,7 +81,7 @@ public class User implements Serializable {
     /**
      * 更新时间
      */
-    @TableField(value = "updateTime", fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "updateTime", fill = FieldFill.INSERT_UPDATE, select = false)
     private Date updateTime;
 
     /**
