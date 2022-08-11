@@ -5,6 +5,7 @@ import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.service.UserService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -51,7 +52,7 @@ public class UserController {
      * @return 用户安全信息
      */
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (userLoginRequest == null) {
             session.setAttribute(userService.USER_LOGIN_STATE, null);
@@ -77,7 +78,7 @@ public class UserController {
      * @return 用户信息
      */
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request) {
+    public User getCurrentUser(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         Object originUser = session.getAttribute(UserService.USER_LOGIN_STATE);
         if (originUser == null) {
@@ -102,7 +103,7 @@ public class UserController {
      * @return 更新后的用户信息
      */
     @PostMapping("/update")
-    public User updateUserInfo(@RequestBody User user, HttpServletRequest request) {
+    public User updateUserInfo(@RequestBody User user, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (user == null) {
             session.setAttribute("errMsg", "请求失败");
@@ -138,7 +139,7 @@ public class UserController {
      * @return 提示消息
      */
     @GetMapping("/logout")
-    public String logout(HttpServletRequest request) {
+    public String logout(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (getCurrentUser(request) == null) {
             return "用户未登录";

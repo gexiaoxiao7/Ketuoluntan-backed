@@ -1,14 +1,20 @@
 package com.suibe.suibe_mma.util;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
 import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
 import com.suibe.suibe_mma.enumeration.UserExceptionEnumeration;
+import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.UserMapper;
+import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -32,7 +38,8 @@ public class ServiceUtil {
      * @param originUser 未脱敏用户信息
      * @return safetyUser
      */
-    public static User getSafetyUser(User originUser) {
+    @NotNull
+    public static User getSafetyUser(@NotNull User originUser) {
         User safetyUser = new User();
         safetyUser.setId(originUser.getId());
         safetyUser.setUsername(originUser.getUsername());
@@ -51,6 +58,7 @@ public class ServiceUtil {
      * @param message 加密信息
      * @return 加密后的信息
      */
+    @NotNull
     public static String encrypt(String message) {
         return DigestUtils.md5DigestAsHex((SALT + message + SALT).getBytes(StandardCharsets.UTF_8));
     }
@@ -97,7 +105,7 @@ public class ServiceUtil {
      * @param userMapper 用户mapper类
      * @return 是否存在
      */
-    public static boolean isUserExist(User user, UserMapper userMapper) {
+    public static boolean isUserExist(@NotNull User user, @NotNull UserMapper userMapper) {
         return userMapper.selectByUserAccount(user.getUserAccount()) > 0;
     }
 
@@ -107,7 +115,7 @@ public class ServiceUtil {
      * @param userMapper 用户mapper类
      * @return 是否存在
      */
-    public static boolean isUserExist(String userAccount, UserMapper userMapper) {
+    public static boolean isUserExist(String userAccount, @NotNull UserMapper userMapper) {
         return userMapper.selectByUserAccount(userAccount) > 0;
     }
 
@@ -118,7 +126,7 @@ public class ServiceUtil {
      * @return 题目信息
      * @throws TopicException 题目id无效或为空
      */
-    public static Topic checkTopicId(Integer id, TopicService topicService) throws TopicException {
+    public static Topic checkTopicId(Long id, TopicService topicService) throws TopicException {
         if (id == null) {
             TopicExceptionEnumeration.TOPIC_ID_IS_NULL.throwTopicException();
         }
@@ -145,6 +153,41 @@ public class ServiceUtil {
             UserExceptionEnumeration.USER_ID_WRONG.throwUserException();
         }
         return user;
+    }
+
+    /**
+     * 检查回复id是否有效或为空
+     * @param id 回复唯一标识
+     * @return 回复信息
+     * @throws ReplyException 回复id无效或为空
+     */
+    public static Reply checkReplyId(Long id, ReplyService replyService) throws ReplyException {
+        if (id == null) {
+            ReplyExceptionEnumeration.REPLY_ID_IS_NULL.throwTopicException();
+        }
+        Reply reply = replyService.getById(id);
+        if (reply == null) {
+            ReplyExceptionEnumeration.REPLY_ID_IS_WRONG.throwTopicException();
+        }
+        return reply;
+    }
+
+    /**
+     * 根据flag与userId改变score值
+     * @param flag 改变score的标志
+     * @param userId 用户唯一标识
+     * @return wrapper
+     */
+    public static UpdateWrapper<User> likeHelper(boolean flag, Integer userId) {
+        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+        wrapper.eq("id", userId);
+        if (flag) {
+            wrapper.setSql("score = score + 1");
+        } else {
+            wrapper.setSql("score = score - 1");
+        }
+        wrapper.setSql("updateTime = now()");
+        return wrapper;
     }
 
 }

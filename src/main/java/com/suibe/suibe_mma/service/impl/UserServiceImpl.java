@@ -10,6 +10,7 @@ import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.service.UserService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserMapper userMapper;
 
     @Override
-    public void register(UserRegisterRequest userRegisterRequest) throws UserException {
+    public void register(@NotNull UserRegisterRequest userRegisterRequest) throws UserException {
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
@@ -55,7 +56,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User login(UserLoginRequest userLoginRequest) throws UserException {
+    public User login(@NotNull UserLoginRequest userLoginRequest) throws UserException {
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         if (checkUserAccount(userAccount) && checkUserPassword(userPassword)) {
@@ -79,7 +80,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User checkCurrentUser(User currentUser) throws UserException {
+    public User checkCurrentUser(@NotNull User currentUser) throws UserException {
         Integer userId = currentUser.getId();
         User getUser = checkUserId(userId, this);
         if (!getUser.equals(currentUser)) {
@@ -89,7 +90,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User updateUserInfo(User user) throws UserException {
+    public User updateUserInfo(@NotNull User user) throws UserException {
         checkUserId(user.getId(), this);
         if (updateById(user)) {
             return getSafetyUser(user);

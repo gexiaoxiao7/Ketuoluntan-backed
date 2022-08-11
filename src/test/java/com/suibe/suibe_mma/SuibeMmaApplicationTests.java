@@ -68,7 +68,7 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test4() {
-        Topic like = topicService.like(1, 1);
+        Topic like = topicService.like(1L, 1);
         System.out.println(like);
     }
 
