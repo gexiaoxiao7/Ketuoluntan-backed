@@ -6,12 +6,12 @@ import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.exception.TopicException;
 
-public interface TopicService extends IService<Topic> {
+import java.util.List;
 
-    /**
-     * 题目总页数
-     */
-    String TOPIC_TOTAL_PAGES = "topicTotalPages";
+/**
+ * 题目服务类接口
+ */
+public interface TopicService extends IService<Topic> {
 
     /**
      * 上传题目
@@ -28,6 +28,13 @@ public interface TopicService extends IService<Topic> {
      * @return 题目信息
      * @throws TopicException id为空或无效、点赞更新失败、topicId为空或无效
      */
-    Topic like(Integer topicId, Integer id) throws TopicException;
+    Topic like(Long topicId, Integer id) throws TopicException;
 
+    /**
+     * 根据用户唯一标识获取所有题目
+     * @param userId 用户唯一标识
+     * @return 题目列表
+     * @throws TopicException 用户id无效或为空
+     */
+    List<Topic> getAllTopicByUserId(Integer userId) throws TopicException;
 }

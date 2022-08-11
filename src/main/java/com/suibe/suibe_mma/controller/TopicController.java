@@ -1,14 +1,13 @@
 package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -31,7 +30,10 @@ public class TopicController {
     @Resource
     private TopicService topicService;
 
-    private Lock lock = new ReentrantLock();
+    /**
+     * 定义一个锁
+     */
+    private final Lock lock = new ReentrantLock();
 
     /**
      * 上传题目控制方法
@@ -57,21 +59,23 @@ public class TopicController {
      * @return 题目信息
      */
     @PostMapping("/like")
-    public Topic like(@RequestBody Integer topicId, HttpServletRequest request) {
+    public Topic like(@RequestBody Topic topic, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (topicId == null) {
+        if (topic == null) {
+            session.setAttribute("errMsg", "题目信息传递失败");
             return null;
         }
         Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
         if (o == null) {
+            session.setAttribute("errMsg", "当前无用户登录");
             return null;
         }
         User originUser = (User) o;
         try {
             lock.lock();
-            Topic topic = topicService.like(topicId, originUser.getId());
+            Topic topic_plus = topicService.like(topic.getTopicId(), originUser.getId());
             session.setAttribute("errMsg", null);
-            return topic;
+            return topic_plus;
         } catch (TopicException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
@@ -83,8 +87,34 @@ public class TopicController {
     /**
      * 获取所有题目信息
      */
-    @PostMapping("/getTotalTopic")
+    @GetMapping("/getTotalTopic")
     public List<Topic> getTotalTopic() {
-        return topicService.list();
+        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("topicLikes");
+        return topicService.list(wrapper);
+    }
+
+    /**
+     * 获取登录用户发布的题目
+     * @param request 请求域对象
+     * @return 题目
+     */
+    @GetMapping("/getMyTopic")
+    public List<Topic> getMyTopic(@NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        Object originUser = session.getAttribute(UserService.USER_LOGIN_STATE);
+        if (originUser == null) {
+            session.setAttribute("errMsg", "当前无用户登录");
+            return null;
+        }
+        User user = (User) originUser;
+        try {
+            List<Topic> list = topicService.getAllTopicByUserId(user.getId());
+            session.setAttribute("errMsg", null);
+            return list;
+        } catch (TopicException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
     }
 }

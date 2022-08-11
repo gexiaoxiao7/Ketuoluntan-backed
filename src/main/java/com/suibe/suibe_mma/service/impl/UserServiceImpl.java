@@ -10,23 +10,28 @@ import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.service.UserService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
-import java.nio.charset.StandardCharsets;
-import java.util.regex.Pattern;
 
+import static com.suibe.suibe_mma.util.ServiceUtil.*;
+
+/**
+ * 用户服务类实现类
+ */
 @Service
 @Transactional(rollbackFor = {UserException.class})
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-
+    /**
+     * 注入userMapper
+     */
     @Resource
     private UserMapper userMapper;
 
     @Override
-    public void register(UserRegisterRequest userRegisterRequest) throws UserException {
+    public void register(@NotNull UserRegisterRequest userRegisterRequest) throws UserException {
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
@@ -34,7 +39,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (userPassword.equals(checkPassword)) {
                 User user = new User();
                 user.setUserAccount(userAccount);
-                if (!isUserExist(user)) {
+                if (!isUserExist(user, userMapper)) {
                     user.setUserPassword(encrypt(userPassword));
                     if (!save(user)) {
                         UserExceptionEnumeration.USER_INSERT_FAILED.throwUserException();
@@ -43,7 +48,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     UserExceptionEnumeration.USER_ACCOUNT_EXISTS.throwUserException();
                 }
             } else {
-                UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECKPASSWORD.throwUserException();
+                UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwUserException();
             }
         } else {
             UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG.throwUserException();
@@ -51,11 +56,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User login(UserLoginRequest userLoginRequest) throws UserException {
+    public User login(@NotNull UserLoginRequest userLoginRequest) throws UserException {
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         if (checkUserAccount(userAccount) && checkUserPassword(userPassword)) {
-            if (isUserExist(userAccount)) {
+            if (isUserExist(userAccount, userMapper)) {
                 QueryWrapper<User> wrapper = new QueryWrapper<>();
                 wrapper
                         .eq("userAccount", userAccount)
@@ -64,7 +69,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 if (user == null) {
                     UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_WRONG.throwUserException();
                 }
-                return getSafetyUser(user);
+                return user;
             } else {
                 UserExceptionEnumeration.USER_ACCOUNT_NOT_EXISTS.throwUserException();
             }
@@ -75,10 +80,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User checkCurrentUser(User getUser, User currentUser) throws UserException {
-        if (getUser == null) {
-            UserExceptionEnumeration.USER_ACCOUNT_NOT_EXISTS.throwUserException();
-        }
+    public User checkCurrentUser(@NotNull User currentUser) throws UserException {
+        Integer userId = currentUser.getId();
+        User getUser = checkUserId(userId, this);
         if (!getUser.equals(currentUser)) {
             UserExceptionEnumeration.USER_INFORMATION_WRONG.throwUserException();
         }
@@ -86,16 +90,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User updateUserInfo(User user) throws UserException {
-        User userInfo = getById(user.getId());
-        if (userInfo == null) {
-            UserExceptionEnumeration.USER_ID_WRONG.throwUserException();
-            return null;
-        }
-        boolean flag = updateById(user);
-        if (flag) {
-            User newUser = getById(user.getId());
-            return getSafetyUser(newUser);
+    public User updateUserInfo(@NotNull User user) throws UserException {
+        checkUserId(user.getId(), this);
+        if (updateById(user)) {
+            return getSafetyUser(user);
         }
         UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
         return null;
@@ -113,86 +111,4 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return safetyUser;
     }
 
-    /**
-     * 用户脱敏
-     *
-     * @param originUser 未脱敏用户信息
-     * @return safetyUser
-     */
-    private User getSafetyUser(User originUser) {
-        User safetyUser = new User();
-        safetyUser.setId(originUser.getId());
-        safetyUser.setUsername(originUser.getUsername());
-        safetyUser.setUserAccount(originUser.getUserAccount());
-        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
-        safetyUser.setCreateTime(originUser.getCreateTime());
-        safetyUser.setEmail(originUser.getEmail());
-        safetyUser.setGender(originUser.getGender());
-        safetyUser.setScore(originUser.getScore());
-        safetyUser.setUserRole(originUser.getUserRole());
-        return safetyUser;
-    }
-
-    /**
-     * 使用md5加密
-     * @param message 加密信息
-     * @return 加密后的信息
-     */
-    private String encrypt(String message) {
-        return DigestUtils.md5DigestAsHex((SALT + message + SALT).getBytes(StandardCharsets.UTF_8));
-    }
-
-    /**
-     * 检验账户名格式
-     * 不为null和""
-     * 长度为8
-     * 不能有数字之外的值
-     * @param userAccount 账户名信息
-     * @return 是否符合
-     */
-    private boolean checkUserAccount(String userAccount) {
-        if (userAccount == null || "".equals(userAccount)) {
-            return false;
-        }
-        if (userAccount.length() != 8) {
-            return false;
-        }
-        return !Pattern.compile(".*[^0-9].*").matcher(userAccount).find();
-    }
-
-    /**
-     * 检验密码格式
-     * 不为null和""
-     * 长度大于等于8
-     * 以字母开头
-     * @param userPassword 密码信息
-     * @return 是否符合
-     */
-    private boolean checkUserPassword(String userPassword) {
-        if (userPassword == null || "".equals(userPassword)) {
-            return false;
-        }
-        if (userPassword.length() < 8) {
-            return false;
-        }
-        return userPassword.matches("[a-zA-Z].*");
-    }
-
-    /**
-     * 检验用户是否存在
-     * @param user 用户信息
-     * @return 是否存在
-     */
-    private boolean isUserExist(User user) {
-        return userMapper.selectByUserAccount(user.getUserAccount()) > 0;
-    }
-
-    /**
-     * 检验用户是否存在
-     * @param userAccount 账户名
-     * @return 是否存在
-     */
-    private boolean isUserExist(String userAccount) {
-        return userMapper.selectByUserAccount(userAccount) > 0;
-    }
 }

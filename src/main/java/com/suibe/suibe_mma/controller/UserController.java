@@ -5,6 +5,7 @@ import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.service.UserService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -51,7 +52,7 @@ public class UserController {
      * @return 用户安全信息
      */
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (userLoginRequest == null) {
             session.setAttribute(userService.USER_LOGIN_STATE, null);
@@ -77,7 +78,7 @@ public class UserController {
      * @return 用户信息
      */
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request) {
+    public User getCurrentUser(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         Object originUser = session.getAttribute(UserService.USER_LOGIN_STATE);
         if (originUser == null) {
@@ -85,9 +86,8 @@ public class UserController {
             return null;
         }
         User currentUser = (User) originUser;
-        User getUser = userService.getById(currentUser.getId());
         try {
-            User safetyUser = userService.checkCurrentUser(getUser, currentUser);
+            User safetyUser = userService.checkCurrentUser(currentUser);
             session.setAttribute("errMsg", null);
             return safetyUser;
         } catch (UserException e) {
@@ -119,13 +119,13 @@ public class UserController {
      * @return 更新后的用户信息
      */
     @PostMapping("/update")
-    public User updateUserInfo(@RequestBody User user, HttpServletRequest request) {
+    public User updateUserInfo(@RequestBody User user, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        User originUser = (User) session.getAttribute(UserService.USER_LOGIN_STATE);
         if (user == null) {
             session.setAttribute("errMsg", "请求失败");
             return null;
         }
+        User originUser = (User) session.getAttribute(UserService.USER_LOGIN_STATE);
         if (originUser == null) {
             session.setAttribute("errMsg", "用户未登录");
             return null;
@@ -138,9 +138,6 @@ public class UserController {
             session.setAttribute("errMsg", "该功能不提供修改密码需求");
             return null;
         }
-        if (user.getId() == null) {
-            session.setAttribute("errMsg", "用户信息唯一标识缺失");
-        }
         try {
             User userInfo = userService.updateUserInfo(user);
             session.setAttribute("errMsg", null);
@@ -150,5 +147,21 @@ public class UserController {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 用户退出登录
+     * @param request 请求域对象
+     * @return 提示消息
+     */
+    @GetMapping("/logout")
+    public String logout(@NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (getCurrentUser(request) == null) {
+            return "用户未登录";
+        }
+        session.setAttribute(UserService.USER_LOGIN_STATE, null);
+        session.setAttribute("errMsg", null);
+        return "用户已退出";
     }
 }

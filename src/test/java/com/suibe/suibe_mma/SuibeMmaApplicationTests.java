@@ -1,12 +1,9 @@
 package com.suibe.suibe_mma;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
-import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.service.TopicService;
@@ -17,8 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
-import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * 项目测试类
+ */
 @SpringBootTest
 class SuibeMmaApplicationTests {
 
@@ -69,7 +68,8 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test4() {
-
+        Topic like = topicService.like(1L, 1);
+        System.out.println(like);
     }
 
 }

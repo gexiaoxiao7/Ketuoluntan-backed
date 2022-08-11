@@ -7,35 +7,41 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 题目信息类
+ * 回复类
  */
 @Data
-@TableName("mma_topic")
-public class Topic implements Serializable {
+@TableName("mma_reply")
+public class Reply implements Serializable {
 
     /**
-     * 题目唯一标识
+     * 回复唯一标识
      */
     @TableId(value = "topicId", type = IdType.AUTO)
+    private Long replyId;
+
+    /**
+     * 回复的题目id
+     */
+    @TableField("topicId")
     private Long topicId;
 
     /**
-     * 题目标题
+     * 回复者id
      */
-    @TableField("topicTitle")
-    private String topicTitle;
+    @TableField("userId")
+    private Integer userId;
 
     /**
-     * 题目内容
+     * 回复内容
      */
-    @TableField("topicContent")
-    private String topicContent;
+    @TableField("replyContent")
+    private String replyContent;
 
     /**
-     * 题目点赞数
+     * 回复点赞数
      */
-    @TableField("topicLikes")
-    private Integer topicLikes;
+    @TableField("replyLikes")
+    private Integer replyLikes;
 
     /**
      * 题目是否被选为精选
@@ -54,12 +60,6 @@ public class Topic implements Serializable {
      */
     @TableField(value = "updateTime", fill = FieldFill.INSERT_UPDATE, select = false)
     private Date updateTime;
-
-    /**
-     * 出题人唯一标识
-     */
-    @TableField("userId")
-    private Integer userId;
 
     /**
      * 题目是否删除标志

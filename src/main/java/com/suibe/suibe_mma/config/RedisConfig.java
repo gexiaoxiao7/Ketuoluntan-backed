@@ -11,9 +11,16 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+/**
+ * 配置Redis相关的键与值类型
+ */
 @Configuration
 public class RedisConfig {
-
+    /**
+     * 键采用string类型，值采用json类型
+     * @param redisConnectionFactory Redis服务器连接工厂类
+     * @return 模板类
+     */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
