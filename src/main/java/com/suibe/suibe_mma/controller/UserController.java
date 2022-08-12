@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.controller;
 
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
+import com.suibe.suibe_mma.domain.request.UserIdRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
@@ -101,20 +102,14 @@ public class UserController {
 
     /**
      * 根据用户ID当获取用户信息
-     * @param userId 用户Id
      * @return 用户信息
      */
     @PostMapping("/searchByUserId")
-    public User searchByUserId(@RequestBody Integer userId, @NotNull HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        try {
-            User user = checkUserId(userId, userService);
-            session.setAttribute("errMsg", null);
-            return user;
-        } catch (UserException e) {
-            session.setAttribute("errMsg", e.getMessage());
+    public User searchByUserId(@RequestBody UserIdRequest userIdRequest) {
+        if(userIdRequest==null){
             return null;
         }
+        return userService.getById(userIdRequest.getUserId());
     }
 
     /**
