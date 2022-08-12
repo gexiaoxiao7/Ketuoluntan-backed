@@ -91,7 +91,7 @@ public class TopicController {
     @GetMapping("/getTotalTopic")
     public List<Topic> getTotalTopic() {
         QueryWrapper<Topic> wrapper = new QueryWrapper<>();
-        wrapper.orderByDesc("topicLikes");
+        wrapper.orderByDesc("createTime");
         return topicService.list(wrapper);
     }
 
