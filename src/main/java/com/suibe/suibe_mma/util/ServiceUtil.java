@@ -142,11 +142,11 @@ public class ServiceUtil {
      */
     public static Reply checkReplyId(Long id, ReplyService replyService) throws ReplyException {
         if (id == null) {
-            ReplyExceptionEnumeration.REPLY_ID_IS_NULL.throwTopicException();
+            ReplyExceptionEnumeration.REPLY_ID_IS_NULL.throwReplyException();
         }
         Reply reply = replyService.getById(id);
         if (reply == null) {
-            ReplyExceptionEnumeration.REPLY_ID_IS_WRONG.throwTopicException();
+            ReplyExceptionEnumeration.REPLY_ID_IS_WRONG.throwReplyException();
         }
         return reply;
     }
