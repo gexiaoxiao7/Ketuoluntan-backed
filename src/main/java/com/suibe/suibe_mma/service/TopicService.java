@@ -37,4 +37,12 @@ public interface TopicService extends IService<Topic> {
      * @throws TopicException 用户id无效或为空
      */
     List<Topic> getAllTopicByUserId(Integer userId) throws TopicException;
+
+    /**
+     * 根据题目信息获取其作者信息
+     * @param topic 题目信息
+     * @return 作者信息
+     * @throws TopicException 题目id无效或为空
+     */
+    User getAuthor(Topic topic) throws TopicException;
 }

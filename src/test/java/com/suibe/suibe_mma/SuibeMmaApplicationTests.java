@@ -3,6 +3,7 @@ package com.suibe.suibe_mma;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
+import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
@@ -68,8 +69,12 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test4() {
-        Topic like = topicService.like(1L, 1);
-        System.out.println(like);
+        UserChangePasswordRequest userChangePasswordRequest = new UserChangePasswordRequest();
+        userChangePasswordRequest.setId(2);
+        userChangePasswordRequest.setOldPassword("CCC123456");
+        userChangePasswordRequest.setNewPassword("CCC123456");
+        userChangePasswordRequest.setNewCheckPassword("CCC123456");
+        userService.changePassword(userChangePasswordRequest);
     }
 
 }

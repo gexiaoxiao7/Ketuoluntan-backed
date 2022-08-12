@@ -13,7 +13,7 @@ public class UserRegisterRequest implements Serializable {
     /**
      * 序列化id
      */
-    private static final long serialVersionUID = -6711190183287286640L;
+    private static final long serialVersionUID = 1L;
 
     /**
      * 用户注册账户名

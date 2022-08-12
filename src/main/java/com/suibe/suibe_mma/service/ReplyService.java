@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.Reply;
+import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.exception.ReplyException;
 
@@ -34,4 +35,12 @@ public interface ReplyService extends IService<Reply> {
      * @throws ReplyException 回复id无效或为空，用户id无效或为空等
      */
     Reply like(Long replyId, Integer userId) throws ReplyException;
+
+    /**
+     * 根据题目获取回复
+     * @param topic 题目信息
+     * @return 回复列表
+     * @throws ReplyException 题目id不存在或无效
+     */
+    List<Reply> getTopicReply(Topic topic) throws ReplyException;
 }

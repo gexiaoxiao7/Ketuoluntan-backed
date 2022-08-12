@@ -25,7 +25,11 @@ public enum TopicExceptionEnumeration {
     /**
      * 点赞更新时失败
      */
-    TOPIC_LIKE_UPDATE_FAILED("题目点赞信息更改失败");
+    TOPIC_LIKE_UPDATE_FAILED("题目点赞信息更改失败"),
+    /**
+     * 题目信息有误
+     */
+    TOPIC_MESSAGE_WRONG("题目信息有误");
 
     /**
      * 异常信息

@@ -1,6 +1,7 @@
 package com.suibe.suibe_mma.controller;
 
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
@@ -97,6 +98,22 @@ public class UserController {
     }
 
     /**
+     * 根据用户ID当获取脱敏用户信息
+     * @param userId 用户Id
+     * @return 用户信息
+     */
+    @PostMapping("/searchByUserId")
+    public User searchByUserId(@RequestBody Integer userId, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        User getUser = userService.getById(userId);
+        if (getUser == null) {
+            session.setAttribute("errMsg","请求失败");
+            return null;
+        }
+        return userService.checkCurrentUser(getUser);
+    }
+
+    /**
      * 用户信息更新
      * @param user 需要更新的用户信息
      * @param request 请求域对象
@@ -147,5 +164,23 @@ public class UserController {
         session.setAttribute(UserService.USER_LOGIN_STATE, null);
         session.setAttribute("errMsg", null);
         return "用户已退出";
+    }
+
+    /**
+     * 更改密码
+     * @param userChangePasswordRequest 更改密码信息实例
+     * @return 提示信息
+     */
+    @PostMapping("/changePassword")
+    public String changePassword(@RequestBody UserChangePasswordRequest userChangePasswordRequest) {
+        if (userChangePasswordRequest == null) {
+            return "请求失败";
+        }
+        try {
+            userService.changePassword(userChangePasswordRequest);
+            return "修改密码成功";
+        } catch (UserException e) {
+            return e.getMessage();
+        }
     }
 }

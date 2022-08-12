@@ -27,5 +27,5 @@ public class TopicUploadRequest implements Serializable {
     /**
      * 序列化id
      */
-    private static final long serialVersionUID = 2085298263565334421L;
+    private static final long serialVersionUID = 1L;
 }
