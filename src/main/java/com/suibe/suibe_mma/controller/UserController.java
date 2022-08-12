@@ -13,6 +13,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import static com.suibe.suibe_mma.util.ServiceUtil.checkUserId;
+
 /**
  * 用户相关操作控制类
  */
@@ -98,19 +100,21 @@ public class UserController {
     }
 
     /**
-     * 根据用户ID当获取脱敏用户信息
+     * 根据用户ID当获取用户信息
      * @param userId 用户Id
      * @return 用户信息
      */
     @PostMapping("/searchByUserId")
-    public User searchByUserId(@RequestBody Integer userId, HttpServletRequest request) {
+    public User searchByUserId(@RequestBody Integer userId, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        User getUser = userService.getById(userId);
-        if (getUser == null) {
-            session.setAttribute("errMsg","请求失败");
+        try {
+            User user = checkUserId(userId, userService);
+            session.setAttribute("errMsg", null);
+            return user;
+        } catch (UserException e) {
+            session.setAttribute("errMsg", e.getMessage());
             return null;
         }
-        return userService.checkCurrentUser(getUser);
     }
 
     /**

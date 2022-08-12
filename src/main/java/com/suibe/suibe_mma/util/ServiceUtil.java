@@ -33,27 +33,6 @@ public class ServiceUtil {
     private ServiceUtil() {}
 
     /**
-     * 用户脱敏
-     *
-     * @param originUser 未脱敏用户信息
-     * @return safetyUser
-     */
-    @NotNull
-    public static User getSafetyUser(@NotNull User originUser) {
-        User safetyUser = new User();
-        safetyUser.setId(originUser.getId());
-        safetyUser.setUsername(originUser.getUsername());
-        safetyUser.setUserAccount(originUser.getUserAccount());
-        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
-        safetyUser.setCreateTime(originUser.getCreateTime());
-        safetyUser.setEmail(originUser.getEmail());
-        safetyUser.setGender(originUser.getGender());
-        safetyUser.setScore(originUser.getScore());
-        safetyUser.setUserRole(originUser.getUserRole());
-        return safetyUser;
-    }
-
-    /**
      * 使用md5加密
      * @param message 加密信息
      * @return 加密后的信息

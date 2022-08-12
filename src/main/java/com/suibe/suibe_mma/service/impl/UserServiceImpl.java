@@ -87,29 +87,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!getUser.equals(currentUser)) {
             UserExceptionEnumeration.USER_INFORMATION_WRONG.throwUserException();
         }
-        return getSafetyUser(currentUser);
+        return currentUser;
     }
 
     @Override
     public User updateUserInfo(@NotNull User user) throws UserException {
         checkUserId(user.getId(), this);
         if (updateById(user)) {
-            return getSafetyUser(user);
+            return user;
         }
         UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
         return null;
     }
 
     @Override
-    public User changeScore(User user, Integer score) throws UserException {
-        User safetyUser = getSafetyUser(user);
-        safetyUser.setScore(safetyUser.getScore() + score);
+    public User changeScore(@NotNull User user, Integer score) throws UserException {
+        Integer id = user.getId();
+        checkUserId(id, this);
+        user.setScore(user.getScore() + score);
         UpdateWrapper<User> wrapper = new UpdateWrapper<>();
-        wrapper.eq("id", safetyUser.getId());
-        if (!update(safetyUser, wrapper)) {
+        wrapper.eq("id", id);
+        if (!update(user, wrapper)) {
             UserExceptionEnumeration.USER_SCORE_UPDATE_FAILED.throwUserException();
         }
-        return safetyUser;
+        return user;
     }
 
     @Override

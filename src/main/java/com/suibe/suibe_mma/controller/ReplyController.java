@@ -30,6 +30,9 @@ public class ReplyController {
     @Resource
     private ReplyService replyService;
 
+    /**
+     * 锁
+     */
     private final Lock lock = new ReentrantLock();
 
     /**
@@ -123,6 +126,29 @@ public class ReplyController {
             List<Reply> replies = replyService.getTopicReply(topic);
             session.setAttribute("errMsg", null);
             return replies;
+        } catch (ReplyException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 根据回复信息获取作者信息
+     * @param reply 回复信息
+     * @param request 请求域对象
+     * @return 作者信息
+     */
+    @PostMapping("/getAuthor")
+    public User getAuthor(@RequestBody Reply reply, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (reply == null) {
+            session.setAttribute("errMsg", "回复信息传递失败");
+            return null;
+        }
+        try {
+            User author = replyService.getAuthor(reply);
+            session.setAttribute("errMsg", null);
+            return author;
         } catch (ReplyException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
