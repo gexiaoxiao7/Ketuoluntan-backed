@@ -27,7 +27,7 @@ public enum  UserExceptionEnumeration {
      */
     USER_INSERT_FAILED("用户信息添加失败"),
     /**
-     * 用户注册时密码与校验码不一致
+     * 密码与校验码不一致
      */
     USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD("密码与校验码不一致"),
     /**
@@ -49,7 +49,23 @@ public enum  UserExceptionEnumeration {
     /**
      * 用户id为null
      */
-    USER_ID_IS_NULL("用户ID为空");
+    USER_ID_IS_NULL("用户ID为空"),
+    /**
+     * 旧密码格式不符
+     */
+    USER_OLD_PASSWORD_FORMAT_WRONG("旧密码格式不符"),
+    /**
+     * 新密码格式不符
+     */
+    USER_NEW_PASSWORD_FORMAT_WRONG("新密码格式不符"),
+    /**
+     * 新密码与旧密码相同
+     */
+    USER_NEW_AND_OLD_PASSWORD_SAME("新密码与旧密码相同"),
+    /**
+     * 密码修改失败
+     */
+    USER_PASSWORD_CHANGE_FAILED("密码修改失败");
 
     /**
      * 异常信息

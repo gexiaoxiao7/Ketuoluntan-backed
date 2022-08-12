@@ -117,4 +117,27 @@ public class TopicController {
             return null;
         }
     }
+
+    /**
+     * 根据题目信息获取作者信息
+     * @param topic 题目信息
+     * @param request 请求域对象
+     * @return 作者信息
+     */
+    @PostMapping("/getAuthor")
+    public User getAuthor(@RequestBody Topic topic, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (topic == null) {
+            session.setAttribute("errMsg", "题目信息传递失败");
+            return null;
+        }
+        try {
+            User author = topicService.getAuthor(topic);
+            session.setAttribute("errMsg", null);
+            return author;
+        } catch (TopicException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
 }

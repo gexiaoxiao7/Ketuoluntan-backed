@@ -1,6 +1,7 @@
 package com.suibe.suibe_mma.controller;
 
 import com.suibe.suibe_mma.domain.Reply;
+import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.exception.ReplyException;
@@ -49,6 +50,11 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 根据当前登录用户id获取自己写的回复
+     * @param request 请求域对象
+     * @return 回复列表
+     */
     @GetMapping("/getMyReply")
     public List<Reply> getMyReply(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -68,8 +74,14 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 对回复进行点赞
+     * @param reply 回复信息
+     * @param request 请求域对象
+     * @return 更新后回复信息
+     */
     @PostMapping("/like")
-    public Reply like(@RequestBody Reply reply, HttpServletRequest request) {
+    public Reply like(@RequestBody Reply reply, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (reply == null) {
             session.setAttribute("errMsg", "回复信息传递失败");
@@ -91,6 +103,29 @@ public class ReplyController {
             return null;
         } finally {
             lock.unlock();
+        }
+    }
+
+    /**
+     * 根据题目信息获取回复
+     * @param topic 题目信息
+     * @param request 请求域对象
+     * @return 回复列表
+     */
+    @PostMapping("/getTopicReply")
+    public List<Reply> getTopicReply(@RequestBody Topic topic, @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (topic == null) {
+            session.setAttribute("errMsg", "请求失败");
+            return null;
+        }
+        try {
+            List<Reply> replies = replyService.getTopicReply(topic);
+            session.setAttribute("errMsg", null);
+            return replies;
+        } catch (ReplyException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
         }
     }
 

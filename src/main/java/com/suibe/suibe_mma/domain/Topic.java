@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -10,6 +11,7 @@ import java.util.Date;
  * 题目信息类
  */
 @Data
+@EqualsAndHashCode(exclude = {"topicLikes"})
 @TableName("mma_topic")
 public class Topic implements Serializable {
 

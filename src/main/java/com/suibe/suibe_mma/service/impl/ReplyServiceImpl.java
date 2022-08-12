@@ -1,10 +1,9 @@
 package com.suibe.suibe_mma.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.Reply;
-import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
 import com.suibe.suibe_mma.exception.ReplyException;
@@ -108,6 +107,19 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             userService.update(likeHelper(flag, reply.getUserId()));
             return reply;
         } catch (UserException e) {
+            throw new ReplyException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<Reply> getTopicReply(@NotNull Topic topic) throws ReplyException {
+        try {
+            Long topicId = topic.getTopicId();
+            checkTopicId(topicId, topicService);
+            QueryWrapper<Reply> wrapper = new QueryWrapper<>();
+            wrapper.eq("topicId", topicId);
+            return list(wrapper);
+        } catch (TopicException e) {
             throw new ReplyException(e.getMessage(), e);
         }
     }

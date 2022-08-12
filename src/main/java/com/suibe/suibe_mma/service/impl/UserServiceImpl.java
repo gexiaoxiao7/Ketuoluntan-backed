@@ -3,6 +3,7 @@ package com.suibe.suibe_mma.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.enumeration.UserExceptionEnumeration;
@@ -109,6 +110,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             UserExceptionEnumeration.USER_SCORE_UPDATE_FAILED.throwUserException();
         }
         return safetyUser;
+    }
+
+    @Override
+    public void changePassword(@NotNull UserChangePasswordRequest request) throws UserException {
+        Integer id = request.getId();
+        String oldPassword = request.getOldPassword();
+        String newPassword = request.getNewPassword();
+        String newCheckPassword = request.getNewCheckPassword();
+        if (checkUserPassword(oldPassword)) {
+            if (checkUserPassword(newPassword)) {
+                if (!oldPassword.equals(newPassword)) {
+                    if (newPassword.equals(newCheckPassword)) {
+                        checkUserId(id, this);
+                        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+                        wrapper
+                                .set("userPassword", encrypt(newPassword))
+                                .setSql("updateTime = now()")
+                                .eq("id", id)
+                                .eq("userPassword", encrypt(oldPassword));
+                        if (!update(wrapper)) {
+                            UserExceptionEnumeration.USER_PASSWORD_CHANGE_FAILED.throwUserException();
+                        }
+                    } else {
+                        UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwUserException();
+                    }
+                } else {
+                    UserExceptionEnumeration.USER_NEW_AND_OLD_PASSWORD_SAME.throwUserException();
+                }
+            } else {
+                UserExceptionEnumeration.USER_NEW_PASSWORD_FORMAT_WRONG.throwUserException();
+            }
+        } else {
+            UserExceptionEnumeration.USER_OLD_PASSWORD_FORMAT_WRONG.throwUserException();
+        }
     }
 
 }

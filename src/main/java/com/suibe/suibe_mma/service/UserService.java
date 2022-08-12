@@ -1,6 +1,7 @@
 package com.suibe.suibe_mma.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
@@ -59,4 +60,11 @@ public interface UserService extends IService<User> {
      * @throws UserException 增加用户积分失败
      */
     User changeScore(User user, Integer score) throws UserException;
+
+    /**
+     * 修改密码
+     * @param request 修改密码信息类
+     * @throws UserException 新旧密码格式错误或一致，新密码与校验码不一致，用户id无效或为空，更新密码失败
+     */
+    void changePassword(UserChangePasswordRequest request) throws UserException;
 }

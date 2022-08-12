@@ -51,14 +51,13 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
 
     @Override
     public User upload(@NotNull TopicUploadRequest topicUploadRequest) throws TopicException {
-        String topicTitle = topicUploadRequest.getTopicTitle();
-        Integer userId = topicUploadRequest.getUserId();
-        if (topicTitle == null || "".equals(topicTitle)) {
-            TopicExceptionEnumeration.TOPIC_TITLE_IS_SPACE.throwTopicException();
-        }
-        User user;
         try {
-            user = checkUserId(userId, userService);
+            String topicTitle = topicUploadRequest.getTopicTitle();
+            Integer userId = topicUploadRequest.getUserId();
+            if (topicTitle == null || "".equals(topicTitle)) {
+                TopicExceptionEnumeration.TOPIC_TITLE_IS_SPACE.throwTopicException();
+            }
+            User user = checkUserId(userId, userService);
             Topic topic = new Topic();
             topic.setUserId(userId);
             topic.setTopicTitle(topicTitle);
@@ -112,6 +111,21 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
             QueryWrapper<Topic> wrapper = new QueryWrapper<>();
             wrapper.eq("userId", userId);
             return list(wrapper);
+        } catch (UserException e) {
+            throw new TopicException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public User getAuthor(Topic topic) throws TopicException {
+        try {
+            Long topicId = topic.getTopicId();
+            Topic topic1 = checkTopicId(topicId, this);
+            if (topic.equals(topic1)) {
+                return checkUserId(topic.getUserId(), userService);
+            }
+            TopicExceptionEnumeration.TOPIC_MESSAGE_WRONG.throwTopicException();
+            return null;
         } catch (UserException e) {
             throw new TopicException(e.getMessage(), e);
         }
