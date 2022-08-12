@@ -3,6 +3,7 @@ package com.suibe.suibe_mma.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.request.TopicIdRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.service.TopicService;
@@ -92,6 +93,17 @@ public class TopicController {
         QueryWrapper<Topic> wrapper = new QueryWrapper<>();
         wrapper.orderByDesc("topicLikes");
         return topicService.list(wrapper);
+    }
+
+    /**
+     * 根据题目Id获取题目信息
+     */
+    @PostMapping("/getTopicById")
+    public Topic getTopicById(@RequestBody TopicIdRequest topicIdRequest) {
+        if(topicIdRequest==null){
+            return null;
+        }
+        return topicService.getById(topicIdRequest.getTopicId());
     }
 
     /**
