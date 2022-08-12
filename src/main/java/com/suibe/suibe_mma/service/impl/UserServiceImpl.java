@@ -94,7 +94,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User updateUserInfo(@NotNull User user) throws UserException {
         checkUserId(user.getId(), this);
         if (updateById(user)) {
-            return user;
+            User newUser = getById(user.getId());
+            return newUser;
         }
         UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
         return null;
