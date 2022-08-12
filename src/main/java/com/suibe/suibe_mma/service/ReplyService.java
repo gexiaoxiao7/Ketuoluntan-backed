@@ -3,6 +3,7 @@ package com.suibe.suibe_mma.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
+import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.exception.ReplyException;
 
@@ -43,4 +44,12 @@ public interface ReplyService extends IService<Reply> {
      * @throws ReplyException 题目id不存在或无效
      */
     List<Reply> getTopicReply(Topic topic) throws ReplyException;
+
+    /**
+     * 根据回复信息获取作者信息
+     * @param reply 回复信息
+     * @return 作者信息
+     * @throws ReplyException 用户id无效或为空
+     */
+    User getAuthor(Reply reply) throws ReplyException;
 }

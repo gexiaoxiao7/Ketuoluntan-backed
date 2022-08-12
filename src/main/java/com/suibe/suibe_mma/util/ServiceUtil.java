@@ -33,27 +33,6 @@ public class ServiceUtil {
     private ServiceUtil() {}
 
     /**
-     * 用户脱敏
-     *
-     * @param originUser 未脱敏用户信息
-     * @return safetyUser
-     */
-    @NotNull
-    public static User getSafetyUser(@NotNull User originUser) {
-        User safetyUser = new User();
-        safetyUser.setId(originUser.getId());
-        safetyUser.setUsername(originUser.getUsername());
-        safetyUser.setUserAccount(originUser.getUserAccount());
-        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
-        safetyUser.setCreateTime(originUser.getCreateTime());
-        safetyUser.setEmail(originUser.getEmail());
-        safetyUser.setGender(originUser.getGender());
-        safetyUser.setScore(originUser.getScore());
-        safetyUser.setUserRole(originUser.getUserRole());
-        return safetyUser;
-    }
-
-    /**
      * 使用md5加密
      * @param message 加密信息
      * @return 加密后的信息
@@ -163,11 +142,11 @@ public class ServiceUtil {
      */
     public static Reply checkReplyId(Long id, ReplyService replyService) throws ReplyException {
         if (id == null) {
-            ReplyExceptionEnumeration.REPLY_ID_IS_NULL.throwTopicException();
+            ReplyExceptionEnumeration.REPLY_ID_IS_NULL.throwReplyException();
         }
         Reply reply = replyService.getById(id);
         if (reply == null) {
-            ReplyExceptionEnumeration.REPLY_ID_IS_WRONG.throwTopicException();
+            ReplyExceptionEnumeration.REPLY_ID_IS_WRONG.throwReplyException();
         }
         return reply;
     }

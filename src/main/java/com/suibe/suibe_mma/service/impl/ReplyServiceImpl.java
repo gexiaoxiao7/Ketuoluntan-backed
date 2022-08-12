@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
+import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
 import com.suibe.suibe_mma.exception.ReplyException;
@@ -58,14 +59,14 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             checkUserId(userId, userService);
             checkTopicId(topicId, topicService);
             if (replyContent == null || "".equals(replyContent)) {
-                ReplyExceptionEnumeration.REPLY_CONTENT_IS_EMPTY.throwTopicException();
+                ReplyExceptionEnumeration.REPLY_CONTENT_IS_EMPTY.throwReplyException();
             }
             Reply reply = new Reply();
             reply.setUserId(userId);
             reply.setTopicId(topicId);
             reply.setReplyContent(replyContent);
             if (!save(reply)) {
-                ReplyExceptionEnumeration.REPLY_SAVE_FAILED.throwTopicException();
+                ReplyExceptionEnumeration.REPLY_SAVE_FAILED.throwReplyException();
             }
         } catch (UserException | TopicException e) {
             throw new ReplyException(e.getMessage(), e);
@@ -102,7 +103,7 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
                 reply.setReplyLikes(reply.getReplyLikes() - 1);
             }
             if (!updateById(reply)) {
-                ReplyExceptionEnumeration.REPLY_LIKE_UPDATE_FAILED.throwTopicException();
+                ReplyExceptionEnumeration.REPLY_LIKE_UPDATE_FAILED.throwReplyException();
             }
             userService.update(likeHelper(flag, reply.getUserId()));
             return reply;
@@ -120,6 +121,21 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             wrapper.eq("topicId", topicId);
             return list(wrapper);
         } catch (TopicException e) {
+            throw new ReplyException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public User getAuthor(Reply reply) throws ReplyException {
+        try {
+            Long replyId = reply.getReplyId();
+            Reply reply1 = checkReplyId(replyId, this);
+            if (reply.equals(reply1)) {
+                return checkUserId(reply.getUserId(), userService);
+            }
+            ReplyExceptionEnumeration.REPLY_MESSAGE_WRONG.throwReplyException();
+            return null;
+        } catch (UserException e) {
             throw new ReplyException(e.getMessage(), e);
         }
     }

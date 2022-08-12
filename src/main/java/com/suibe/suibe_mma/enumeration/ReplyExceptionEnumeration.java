@@ -22,7 +22,11 @@ public enum ReplyExceptionEnumeration {
     /**
      * 回复点赞信息更新失败
      */
-    REPLY_LIKE_UPDATE_FAILED("回复点赞信息更新失败");
+    REPLY_LIKE_UPDATE_FAILED("回复点赞信息更新失败"),
+    /**
+     * 回复信息有误
+     */
+    REPLY_MESSAGE_WRONG("回复信息有误");
 
     /**
      * 异常信息
@@ -41,7 +45,7 @@ public enum ReplyExceptionEnumeration {
      * 抛出题目异常
      * @throws ReplyException 回复异常
      */
-    public void throwTopicException() throws ReplyException {
+    public void throwReplyException() throws ReplyException {
         throw new ReplyException(message);
     }
 
