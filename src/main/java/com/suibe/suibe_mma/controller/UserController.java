@@ -105,11 +105,20 @@ public class UserController {
      * @return 用户信息
      */
     @PostMapping("/searchByUserId")
-    public User searchByUserId(@RequestBody UserIdRequest userIdRequest) {
-        if(userIdRequest==null){
+    public User searchByUserId(@RequestBody UserIdRequest userIdRequest, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (userIdRequest == null) {
+            session.setAttribute("errMsg", "用户id传递失败");
             return null;
         }
-        return userService.getById(userIdRequest.getUserId());
+        try {
+            User user = checkUserId(userIdRequest.getUserId(), userService);
+            session.setAttribute("errMsg", null);
+            return user;
+        } catch (UserException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
     }
 
     /**

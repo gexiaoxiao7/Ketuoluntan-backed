@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.suibe.suibe_mma.util.ServiceUtil.checkTopicId;
+
 /**
  * 题目相关操作控制类
  */
@@ -99,11 +101,20 @@ public class TopicController {
      * 根据题目Id获取题目信息
      */
     @PostMapping("/getTopicById")
-    public Topic getTopicById(@RequestBody TopicIdRequest topicIdRequest) {
-        if(topicIdRequest==null){
+    public Topic getTopicById(@RequestBody TopicIdRequest topicIdRequest, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (topicIdRequest == null) {
+            session.setAttribute("errMsg", "题目id传递失败");
             return null;
         }
-        return topicService.getById(topicIdRequest.getTopicId());
+        try {
+            Topic topic = checkTopicId(topicIdRequest.getTopicId(), topicService);
+            session.setAttribute("errMsg", null);
+            return topic;
+        } catch (TopicException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
     }
 
     /**

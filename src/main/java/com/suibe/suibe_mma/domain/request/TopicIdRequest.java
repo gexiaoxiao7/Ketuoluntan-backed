@@ -10,5 +10,5 @@ public class TopicIdRequest implements Serializable {
 
     private static final long serialVersionUID = -6997068719817136318L;
 
-    private Integer topicId;
+    private Long topicId;
 }
