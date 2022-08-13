@@ -82,9 +82,9 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
             Topic topic = checkTopicId(topicId, this);
             String key = "suibe:mma:topicId:" + topicId;
             SetOperations<String, Object> operations = template.opsForSet();
-            Boolean member = operations.isMember(key, id);
+            Integer integer = likeOrNot(id, template, key);
             boolean flag = false;
-            if (member == null || !member) {
+            if (integer == -1) {
                 operations.add(key, id);
                 topic.setTopicLikes(topic.getTopicLikes() + 1);
                 flag = true;
@@ -117,7 +117,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
     }
 
     @Override
-    public User getAuthor(Topic topic) throws TopicException {
+    public User getAuthor(@NotNull Topic topic) throws TopicException {
         try {
             Long topicId = topic.getTopicId();
             Topic topic1 = checkTopicId(topicId, this);
@@ -126,6 +126,16 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
             }
             TopicExceptionEnumeration.TOPIC_MESSAGE_WRONG.throwTopicException();
             return null;
+        } catch (UserException e) {
+            throw new TopicException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Integer topicLikeHelp(@NotNull Topic topic, Integer id) throws TopicException {
+        try {
+            checkUserId(id, userService);
+            return likeOrNot(id, template, "suibe:mma:topicId:" + topic.getTopicId());
         } catch (UserException e) {
             throw new TopicException(e.getMessage(), e);
         }

@@ -71,6 +71,12 @@ public class Topic implements Serializable {
     private Boolean isDelete;
 
     /**
+     * 回复数
+     */
+    @TableField("replyNum")
+    private Long replyNum;
+
+    /**
      * 序列化id
      */
     @TableField(exist = false)

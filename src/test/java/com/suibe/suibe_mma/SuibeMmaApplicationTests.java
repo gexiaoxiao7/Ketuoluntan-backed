@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 项目测试类
@@ -75,6 +76,12 @@ class SuibeMmaApplicationTests {
         userChangePasswordRequest.setNewPassword("CCC123456");
         userChangePasswordRequest.setNewCheckPassword("CCC123456");
         userService.changePassword(userChangePasswordRequest);
+    }
+
+    @Test
+    void test5() {
+        List<Topic> list = topicService.list();
+        list.forEach(topic -> System.out.println(topicService.topicLikeHelp(topic, 1)));
     }
 
 }

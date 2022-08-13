@@ -105,7 +105,7 @@ public class UserController {
      * @return 用户信息
      */
     @PostMapping("/searchByUserId")
-    public User searchByUserId(@RequestBody UserIdRequest userIdRequest, HttpServletRequest request) {
+    public User searchByUserId(@RequestBody UserIdRequest userIdRequest, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (userIdRequest == null) {
             session.setAttribute("errMsg", "用户id传递失败");

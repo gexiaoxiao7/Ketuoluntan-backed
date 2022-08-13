@@ -74,10 +74,17 @@ public class TopicController {
             return null;
         }
         User originUser = (User) o;
+        Integer id = originUser.getId();
         try {
             lock.lock();
-            Topic topic_plus = topicService.like(topic.getTopicId(), originUser.getId());
+            Topic topic_plus = topicService.like(topic.getTopicId(), id);
             session.setAttribute("errMsg", null);
+            Integer integer = topicService.topicLikeHelp(topic_plus, id);
+            if (integer == 1) {
+                session.setAttribute("topicId:" + topic_plus.getTopicId(), 1);
+            } else {
+                session.setAttribute("topicId:" + topic_plus.getTopicId(), null);
+            }
             return topic_plus;
         } catch (TopicException e) {
             session.setAttribute("errMsg", e.getMessage());
@@ -91,10 +98,33 @@ public class TopicController {
      * 获取所有题目信息
      */
     @GetMapping("/getTotalTopic")
-    public List<Topic> getTotalTopic() {
-        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
-        wrapper.orderByDesc("createTime");
-        return topicService.list(wrapper);
+    public List<Topic> getTotalTopic(@NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
+            if (o == null) {
+                session.setAttribute("errMsg", "当前无用户登录");
+                return null;
+            }
+            User user = (User) o;
+            QueryWrapper<Topic> wrapper = new QueryWrapper<>();
+            wrapper.orderByDesc("createTime");
+            List<Topic> list = topicService.list(wrapper);
+            Integer id = user.getId();
+            list.forEach(
+                    topic -> {
+                        Integer integer = topicService.topicLikeHelp(topic, id);
+                        if (integer == 1) {
+                            session.setAttribute("topicId:" + topic.getTopicId(), 1);
+                        }
+                    }
+            );
+            session.setAttribute("errMsg", null);
+            return list;
+        } catch (TopicException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
     }
 
     /**

@@ -26,7 +26,11 @@ public enum ReplyExceptionEnumeration {
     /**
      * 回复信息有误
      */
-    REPLY_MESSAGE_WRONG("回复信息有误");
+    REPLY_MESSAGE_WRONG("回复信息有误"),
+    /**
+     * 题目回复数修改失败
+     */
+    REPLY_TOPIC_REPLYNUM_ADD_FAILED("题目回复数修改失败");
 
     /**
      * 异常信息

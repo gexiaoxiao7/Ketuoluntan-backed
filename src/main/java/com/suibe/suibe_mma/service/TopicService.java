@@ -45,4 +45,13 @@ public interface TopicService extends IService<Topic> {
      * @throws TopicException 题目id无效或为空
      */
     User getAuthor(Topic topic) throws TopicException;
+
+    /**
+     * 确定点赞信息
+     * @param topic 题目信息
+     * @param id 用户唯一标识
+     * @return 是否点赞
+     * @throws TopicException 用户id无效或为空
+     */
+    Integer topicLikeHelp(Topic topic, Integer id) throws TopicException;
 }

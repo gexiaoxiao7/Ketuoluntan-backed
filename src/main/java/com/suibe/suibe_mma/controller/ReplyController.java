@@ -98,8 +98,15 @@ public class ReplyController {
         User originUser = (User) o;
         try {
             lock.lock();
-            Reply reply_plus = replyService.like(reply.getReplyId(), originUser.getId());
+            Integer id = originUser.getId();
+            Reply reply_plus = replyService.like(reply.getReplyId(), id);
             session.setAttribute("errMsg", null);
+            Integer integer = replyService.replyLikeHelp(reply_plus, id);
+            if (integer == 1) {
+                session.setAttribute("replyId:" + reply_plus.getReplyId(), 1);
+            } else {
+                session.setAttribute("replyId:" + reply_plus.getReplyId(), null);
+            }
             return reply_plus;
         } catch (ReplyException e) {
             session.setAttribute("errMsg", e.getMessage());
@@ -123,7 +130,22 @@ public class ReplyController {
             return null;
         }
         try {
+            Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
+            if (o == null) {
+                session.setAttribute("errMsg", "当前无用户登录");
+                return null;
+            }
+            User user = (User) o;
+            Integer id = user.getId();
             List<Reply> replies = replyService.getTopicReply(topic);
+            replies.forEach(
+                    reply -> {
+                        Integer integer = replyService.replyLikeHelp(reply, id);
+                        if (integer == 1) {
+                            session.setAttribute("replyId:" + reply.getReplyId(), 1);
+                        }
+                    }
+            );
             session.setAttribute("errMsg", null);
             return replies;
         } catch (ReplyException e) {
@@ -139,7 +161,7 @@ public class ReplyController {
      * @return 作者信息
      */
     @PostMapping("/getAuthor")
-    public User getAuthor(@RequestBody Reply reply, HttpServletRequest request) {
+    public User getAuthor(@RequestBody Reply reply, @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (reply == null) {
             session.setAttribute("errMsg", "回复信息传递失败");

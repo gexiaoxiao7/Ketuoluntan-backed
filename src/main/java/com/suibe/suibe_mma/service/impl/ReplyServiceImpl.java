@@ -1,6 +1,7 @@
 package com.suibe.suibe_mma.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
@@ -68,6 +69,14 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             if (!save(reply)) {
                 ReplyExceptionEnumeration.REPLY_SAVE_FAILED.throwReplyException();
             }
+            UpdateWrapper<Topic> wrapper = new UpdateWrapper<>();
+            wrapper
+                    .eq("topicId", topicId)
+                    .setSql("replyNum = replyNum + 1")
+                    .setSql("updateTime = now()");
+            if (!topicService.update(wrapper)) {
+                ReplyExceptionEnumeration.REPLY_TOPIC_REPLYNUM_ADD_FAILED.throwReplyException();
+            }
         } catch (UserException | TopicException e) {
             throw new ReplyException(e.getMessage(), e);
         }
@@ -92,9 +101,9 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             Reply reply = checkReplyId(replyId, this);
             String key = "suibe:mma:replyId:" + replyId;
             SetOperations<String, Object> operations = template.opsForSet();
-            Boolean member = operations.isMember(key, userId);
+            Integer integer = likeOrNot(userId, template, key);
             boolean flag = false;
-            if (member == null || !member) {
+            if (integer == -1) {
                 operations.add(key, userId);
                 reply.setReplyLikes(reply.getReplyLikes() + 1);
                 flag = true;
@@ -127,7 +136,7 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
     }
 
     @Override
-    public User getAuthor(Reply reply) throws ReplyException {
+    public User getAuthor(@NotNull Reply reply) throws ReplyException {
         try {
             Long replyId = reply.getReplyId();
             Reply reply1 = checkReplyId(replyId, this);
@@ -136,6 +145,16 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             }
             ReplyExceptionEnumeration.REPLY_MESSAGE_WRONG.throwReplyException();
             return null;
+        } catch (UserException e) {
+            throw new ReplyException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Integer replyLikeHelp(@NotNull Reply reply, Integer id) throws ReplyException {
+        try {
+            checkUserId(id, userService);
+            return likeOrNot(id, template, "suibe:mma:replyId:" + reply.getReplyId());
         } catch (UserException e) {
             throw new ReplyException(e.getMessage(), e);
         }

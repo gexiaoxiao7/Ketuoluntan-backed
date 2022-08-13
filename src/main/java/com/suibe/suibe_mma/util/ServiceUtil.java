@@ -15,6 +15,8 @@ import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -157,6 +159,7 @@ public class ServiceUtil {
      * @param userId 用户唯一标识
      * @return wrapper
      */
+    @NotNull
     public static UpdateWrapper<User> likeHelper(boolean flag, Integer userId) {
         UpdateWrapper<User> wrapper = new UpdateWrapper<>();
         wrapper.eq("id", userId);
@@ -167,6 +170,22 @@ public class ServiceUtil {
         }
         wrapper.setSql("updateTime = now()");
         return wrapper;
+    }
+
+    /**
+     * 判断当前登录用户是否点赞题目或回复
+     * @param userId 用户唯一标识
+     * @param template redis模板类
+     * @param key 键
+     * @return 标志
+     */
+    public static Integer likeOrNot(Integer userId, @NotNull RedisTemplate<String, Object> template, String key) {
+        SetOperations<String, Object> operations = template.opsForSet();
+        Boolean member = operations.isMember(key, userId);
+        if (member == null || !member) {
+            return -1;
+        }
+        return 1;
     }
 
 }

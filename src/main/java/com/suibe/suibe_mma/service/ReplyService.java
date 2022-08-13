@@ -52,4 +52,13 @@ public interface ReplyService extends IService<Reply> {
      * @throws ReplyException 用户id无效或为空
      */
     User getAuthor(Reply reply) throws ReplyException;
+
+    /**
+     * 确定点赞信息
+     * @param reply 回复信息
+     * @param id 用户唯一标识
+     * @return 是否点赞
+     * @throws ReplyException 用户id为空或无效
+     */
+    Integer replyLikeHelp(Reply reply, Integer id) throws ReplyException;
 }
