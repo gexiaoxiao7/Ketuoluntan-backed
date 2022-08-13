@@ -180,12 +180,16 @@ public class UserController {
      * @return 提示信息
      */
     @PostMapping("/changePassword")
-    public String changePassword(@RequestBody UserChangePasswordRequest userChangePasswordRequest) {
+    public String changePassword(
+            @RequestBody UserChangePasswordRequest userChangePasswordRequest,
+            HttpServletRequest request) {
         if (userChangePasswordRequest == null) {
             return "请求失败";
         }
         try {
-            userService.changePassword(userChangePasswordRequest);
+            request
+                    .getSession()
+                    .setAttribute(UserService.USER_LOGIN_STATE, userService.changePassword(userChangePasswordRequest));
             return "修改密码成功";
         } catch (UserException e) {
             return e.getMessage();

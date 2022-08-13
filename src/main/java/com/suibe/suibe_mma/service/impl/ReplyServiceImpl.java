@@ -102,11 +102,12 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
                 operations.remove(key, userId);
                 reply.setReplyLikes(reply.getReplyLikes() - 1);
             }
+            reply.setUpdateTime(null);
             if (!updateById(reply)) {
                 ReplyExceptionEnumeration.REPLY_LIKE_UPDATE_FAILED.throwReplyException();
             }
             userService.update(likeHelper(flag, reply.getUserId()));
-            return reply;
+            return getById(replyId);
         } catch (UserException e) {
             throw new ReplyException(e.getMessage(), e);
         }

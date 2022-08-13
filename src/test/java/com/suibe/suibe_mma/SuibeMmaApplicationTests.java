@@ -71,7 +71,7 @@ class SuibeMmaApplicationTests {
     void test4() {
         UserChangePasswordRequest userChangePasswordRequest = new UserChangePasswordRequest();
         userChangePasswordRequest.setId(2);
-        userChangePasswordRequest.setOldPassword("CCC123456");
+        userChangePasswordRequest.setOldPassword("CCCC123456");
         userChangePasswordRequest.setNewPassword("CCC123456");
         userChangePasswordRequest.setNewCheckPassword("CCC123456");
         userService.changePassword(userChangePasswordRequest);

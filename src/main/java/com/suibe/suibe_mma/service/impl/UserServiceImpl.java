@@ -92,10 +92,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User updateUserInfo(@NotNull User user) throws UserException {
-        checkUserId(user.getId(), this);
+        Integer id = user.getId();
+        checkUserId(id, this);
+        user.setUpdateTime(null);
         if (updateById(user)) {
-            User newUser = getById(user.getId());
-            return newUser;
+            return getById(id);
         }
         UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
         return null;
@@ -115,7 +116,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public void changePassword(@NotNull UserChangePasswordRequest request) throws UserException {
+    public User changePassword(@NotNull UserChangePasswordRequest request) throws UserException {
         Integer id = request.getId();
         String oldPassword = request.getOldPassword();
         String newPassword = request.getNewPassword();
@@ -134,6 +135,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                         if (!update(wrapper)) {
                             UserExceptionEnumeration.USER_PASSWORD_CHANGE_FAILED.throwUserException();
                         }
+                        return getById(id);
                     } else {
                         UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwUserException();
                     }
@@ -146,6 +148,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } else {
             UserExceptionEnumeration.USER_OLD_PASSWORD_FORMAT_WRONG.throwUserException();
         }
+        return null;
     }
 
 }

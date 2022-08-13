@@ -1,7 +1,6 @@
 package com.suibe.suibe_mma.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
@@ -93,6 +92,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
                 operations.remove(key, id);
                 topic.setTopicLikes(topic.getTopicLikes() - 1);
             }
+            topic.setUpdateTime(null);
             if (!updateById(topic)) {
                 TopicExceptionEnumeration.TOPIC_LIKE_UPDATE_FAILED.throwTopicException();
             }

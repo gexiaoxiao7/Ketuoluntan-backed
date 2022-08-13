@@ -64,7 +64,8 @@ public interface UserService extends IService<User> {
     /**
      * 修改密码
      * @param request 修改密码信息类
+     * @return 用户信息
      * @throws UserException 新旧密码格式错误或一致，新密码与校验码不一致，用户id无效或为空，更新密码失败
      */
-    void changePassword(UserChangePasswordRequest request) throws UserException;
+    User changePassword(UserChangePasswordRequest request) throws UserException;
 }
