@@ -128,7 +128,9 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             Long topicId = topic.getTopicId();
             checkTopicId(topicId, topicService);
             QueryWrapper<Reply> wrapper = new QueryWrapper<>();
-            wrapper.eq("topicId", topicId);
+            wrapper
+                    .eq("topicId", topicId)
+                    .orderByDesc("replyLikes");
             return list(wrapper);
         } catch (TopicException e) {
             throw new ReplyException(e.getMessage(), e);

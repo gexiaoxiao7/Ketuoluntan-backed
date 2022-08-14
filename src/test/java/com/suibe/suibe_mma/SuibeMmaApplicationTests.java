@@ -1,12 +1,15 @@
 package com.suibe.suibe_mma;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
+import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,9 @@ class SuibeMmaApplicationTests {
 
     @Autowired
     private TopicService topicService;
+
+    @Autowired
+    private ReplyService replyService;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -82,6 +88,13 @@ class SuibeMmaApplicationTests {
     void test5() {
         List<Topic> list = topicService.list();
         list.forEach(topic -> System.out.println(topicService.topicLikeHelp(topic, 1)));
+    }
+
+    @Test
+    void test6() {
+        Topic topic = topicService.getById(1);
+        replyService.getTopicReply(topic).forEach(System.out::println);
+
     }
 
 }

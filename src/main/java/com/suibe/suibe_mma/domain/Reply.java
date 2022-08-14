@@ -16,7 +16,7 @@ public class Reply implements Serializable {
     /**
      * 回复唯一标识
      */
-    @TableId(value = "topicId", type = IdType.AUTO)
+    @TableId(value = "replyId", type = IdType.AUTO)
     private Long replyId;
 
     /**
