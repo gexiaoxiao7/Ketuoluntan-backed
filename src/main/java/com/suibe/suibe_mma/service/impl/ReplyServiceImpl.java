@@ -103,7 +103,7 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             Reply reply = checkReplyId(replyId, this);
             String key = "suibe:mma:replyId:" + replyId;
             return (Reply) ServiceUtil.like(userId, template, key, reply, this, userService);
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
     }

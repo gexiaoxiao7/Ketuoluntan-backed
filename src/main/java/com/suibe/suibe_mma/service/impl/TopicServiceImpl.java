@@ -83,7 +83,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
             Topic topic = checkTopicId(topicId, this);
             String key = "suibe:mma:topicId:" + topicId;
             return (Topic) ServiceUtil.like(id, template, key, topic, this, userService);
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             throw new TopicException(e.getMessage(), e);
         }
     }

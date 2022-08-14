@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
+import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.UserService;
 import lombok.Data;
@@ -91,7 +92,7 @@ public class Reply implements Serializable, Likable {
             @NotNull RedisTemplate<String, Object> template,
             String key,
             IService<? extends Likable> service,
-            UserService userService) {
+            UserService userService) throws ReplyException {
         boolean rflag = false;
         SetOperations<String, Object> operations = template.opsForSet();
         if (flag == -1) {

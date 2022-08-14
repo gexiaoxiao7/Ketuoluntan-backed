@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
+import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 
@@ -95,10 +97,10 @@ public class Topic implements Serializable, Likable {
     public Likable like(
             Integer userId,
             Integer flag,
-            RedisTemplate<String, Object> template,
+            @NotNull RedisTemplate<String, Object> template,
             String key,
             IService<? extends Likable> service,
-            UserService userService) {
+            UserService userService) throws TopicException {
         boolean tflag = false;
         SetOperations<String, Object> operations = template.opsForSet();
         if (flag == -1) {

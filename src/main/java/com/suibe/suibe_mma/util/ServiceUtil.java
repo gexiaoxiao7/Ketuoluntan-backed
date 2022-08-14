@@ -18,7 +18,6 @@ import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -189,13 +188,23 @@ public class ServiceUtil {
         return 1;
     }
 
+    /**
+     * 点赞接口帮助方法
+     * @param userId 用户唯一标识
+     * @param template redis模板类
+     * @param key 键
+     * @param likable 点赞类
+     * @param service 相关服务类
+     * @param userService 用户服务类
+     * @return 点赞类信息
+     */
     public static Likable like(
             Integer userId,
             RedisTemplate<String, Object> template,
             String key,
-            Likable likable,
+            @NotNull Likable likable,
             IService<? extends Likable> service,
-            UserService userService) {
+            UserService userService) throws RuntimeException {
         return likable.like(userId, likeOrNot(userId, template, key), template, key, service, userService);
     }
 

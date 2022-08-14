@@ -17,6 +17,7 @@ public interface Likable {
      * @param service 相关服务类
      * @param userService 用户服务类
      * @return 点赞类信息
+     * @throws RuntimeException 运行时异常类
      */
     Likable like(
             Integer userId,
@@ -25,5 +26,5 @@ public interface Likable {
             String key,
             IService<? extends Likable> service,
             UserService userService
-    );
+    ) throws RuntimeException;
 }
