@@ -11,6 +11,7 @@ import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.TopicMapper;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
+import com.suibe.suibe_mma.util.ServiceUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
@@ -81,24 +82,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
             checkUserId(id, userService);
             Topic topic = checkTopicId(topicId, this);
             String key = "suibe:mma:topicId:" + topicId;
-            SetOperations<String, Object> operations = template.opsForSet();
-            Integer integer = likeOrNot(id, template, key);
-            boolean flag = false;
-            if (integer == -1) {
-                operations.add(key, id);
-                topic.setTopicLikes(topic.getTopicLikes() + 1);
-                flag = true;
-            } else {
-                operations.remove(key, id);
-                topic.setTopicLikes(topic.getTopicLikes() - 1);
-            }
-            topic.setUpdateTime(null);
-            if (!updateById(topic)) {
-                TopicExceptionEnumeration.TOPIC_LIKE_UPDATE_FAILED.throwTopicException();
-            }
-            userService.update(likeHelper(flag, topic.getUserId()));
-
-            return getById(topicId);
+            return (Topic) ServiceUtil.like(id, template, key, topic, this, userService);
         } catch (UserException e) {
             throw new TopicException(e.getMessage(), e);
         }

@@ -1,11 +1,20 @@
 package com.suibe.suibe_mma.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.suibe.suibe_mma.domain.able.Likable;
+import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
+import com.suibe.suibe_mma.service.TopicService;
+import com.suibe.suibe_mma.service.UserService;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 
 /**
  * 题目信息类
@@ -13,7 +22,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(exclude = {"topicLikes"})
 @TableName("mma_topic")
-public class Topic implements Serializable {
+public class Topic implements Serializable, Likable {
 
     /**
      * 题目唯一标识
@@ -81,4 +90,31 @@ public class Topic implements Serializable {
      */
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @Override
+    public Likable like(
+            Integer userId,
+            Integer flag,
+            RedisTemplate<String, Object> template,
+            String key,
+            IService<? extends Likable> service,
+            UserService userService) {
+        boolean tflag = false;
+        SetOperations<String, Object> operations = template.opsForSet();
+        if (flag == -1) {
+            operations.add(key, userId);
+            topicLikes += 1;
+            tflag = true;
+        } else {
+            operations.remove(key, userId);
+            topicLikes -= 1;
+        }
+        updateTime = null;
+        TopicService topicService = (TopicService) service;
+        if (!topicService.updateById(this)) {
+            TopicExceptionEnumeration.TOPIC_LIKE_UPDATE_FAILED.throwTopicException();
+        }
+        userService.update(likeHelper(tflag, this.userId));
+        return topicService.getById(topicId);
+    }
 }

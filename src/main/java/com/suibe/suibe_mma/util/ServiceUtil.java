@@ -1,9 +1,11 @@
 package com.suibe.suibe_mma.util;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
 import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
 import com.suibe.suibe_mma.enumeration.UserExceptionEnumeration;
@@ -180,12 +182,21 @@ public class ServiceUtil {
      * @return 标志
      */
     public static Integer likeOrNot(Integer userId, @NotNull RedisTemplate<String, Object> template, String key) {
-        SetOperations<String, Object> operations = template.opsForSet();
-        Boolean member = operations.isMember(key, userId);
+        Boolean member = template.opsForSet().isMember(key, userId);
         if (member == null || !member) {
             return -1;
         }
         return 1;
+    }
+
+    public static Likable like(
+            Integer userId,
+            RedisTemplate<String, Object> template,
+            String key,
+            Likable likable,
+            IService<? extends Likable> service,
+            UserService userService) {
+        return likable.like(userId, likeOrNot(userId, template, key), template, key, service, userService);
     }
 
 }

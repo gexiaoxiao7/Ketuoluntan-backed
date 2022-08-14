@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
 import com.suibe.suibe_mma.exception.ReplyException;
@@ -15,6 +16,7 @@ import com.suibe.suibe_mma.mapper.ReplyMapper;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
+import com.suibe.suibe_mma.util.ServiceUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
@@ -100,23 +102,7 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             checkUserId(userId, userService);
             Reply reply = checkReplyId(replyId, this);
             String key = "suibe:mma:replyId:" + replyId;
-            SetOperations<String, Object> operations = template.opsForSet();
-            Integer integer = likeOrNot(userId, template, key);
-            boolean flag = false;
-            if (integer == -1) {
-                operations.add(key, userId);
-                reply.setReplyLikes(reply.getReplyLikes() + 1);
-                flag = true;
-            } else {
-                operations.remove(key, userId);
-                reply.setReplyLikes(reply.getReplyLikes() - 1);
-            }
-            reply.setUpdateTime(null);
-            if (!updateById(reply)) {
-                ReplyExceptionEnumeration.REPLY_LIKE_UPDATE_FAILED.throwReplyException();
-            }
-            userService.update(likeHelper(flag, reply.getUserId()));
-            return getById(replyId);
+            return (Reply) ServiceUtil.like(userId, template, key, reply, this, userService);
         } catch (UserException e) {
             throw new ReplyException(e.getMessage(), e);
         }
