@@ -7,7 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 /**
  * 能够进行点赞类继承的接口
  */
-public interface Likable {
+public interface Likable<T extends Likable<T>> {
     /**
      * 点赞接口
      * @param userId 点赞用户唯一标识
@@ -19,12 +19,12 @@ public interface Likable {
      * @return 点赞类信息
      * @throws RuntimeException 运行时异常类
      */
-    Likable like(
+    T like(
             Integer userId,
             Integer flag,
             RedisTemplate<String, Object> template,
             String key,
-            IService<? extends Likable> service,
+            IService<T> service,
             UserService userService
     ) throws RuntimeException;
 }

@@ -193,19 +193,19 @@ public class ServiceUtil {
      * @param userId 用户唯一标识
      * @param template redis模板类
      * @param key 键
-     * @param likable 点赞类
+     * @param t 点赞类
      * @param service 相关服务类
      * @param userService 用户服务类
      * @return 点赞类信息
      */
-    public static Likable like(
+    public static <T extends Likable<T>> T like(
             Integer userId,
             RedisTemplate<String, Object> template,
             String key,
-            @NotNull Likable likable,
-            IService<? extends Likable> service,
+            @NotNull T t,
+            IService<T> service,
             UserService userService) throws RuntimeException {
-        return likable.like(userId, likeOrNot(userId, template, key), template, key, service, userService);
+        return t.like(userId, likeOrNot(userId, template, key), template, key, service, userService);
     }
 
 }

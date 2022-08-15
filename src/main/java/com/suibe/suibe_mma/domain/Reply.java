@@ -22,7 +22,7 @@ import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
  */
 @Data
 @TableName("mma_reply")
-public class Reply implements Serializable, Likable {
+public class Reply implements Serializable, Likable<Reply> {
 
     /**
      * 回复唯一标识
@@ -86,12 +86,12 @@ public class Reply implements Serializable, Likable {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public Likable like(
+    public Reply like(
             Integer userId,
             Integer flag,
             @NotNull RedisTemplate<String, Object> template,
             String key,
-            IService<? extends Likable> service,
+            IService<Reply> service,
             UserService userService) throws ReplyException {
         boolean rflag = false;
         SetOperations<String, Object> operations = template.opsForSet();
@@ -104,11 +104,10 @@ public class Reply implements Serializable, Likable {
             replyLikes -= 1;
         }
         updateTime = null;
-        ReplyService replyService = (ReplyService) service;
-        if (!replyService.updateById(this)) {
+        if (!service.updateById(this)) {
             ReplyExceptionEnumeration.REPLY_LIKE_UPDATE_FAILED.throwReplyException();
         }
         userService.update(likeHelper(rflag, this.userId));
-        return replyService.getById(replyId);
+        return service.getById(replyId);
     }
 }

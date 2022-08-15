@@ -24,7 +24,7 @@ import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 @Data
 @EqualsAndHashCode(exclude = {"topicLikes"})
 @TableName("mma_topic")
-public class Topic implements Serializable, Likable {
+public class Topic implements Serializable, Likable<Topic> {
 
     /**
      * 题目唯一标识
@@ -94,12 +94,12 @@ public class Topic implements Serializable, Likable {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public Likable like(
+    public Topic like(
             Integer userId,
             Integer flag,
             @NotNull RedisTemplate<String, Object> template,
             String key,
-            IService<? extends Likable> service,
+            IService<Topic> service,
             UserService userService) throws TopicException {
         boolean tflag = false;
         SetOperations<String, Object> operations = template.opsForSet();
@@ -112,11 +112,10 @@ public class Topic implements Serializable, Likable {
             topicLikes -= 1;
         }
         updateTime = null;
-        TopicService topicService = (TopicService) service;
-        if (!topicService.updateById(this)) {
+        if (!service.updateById(this)) {
             TopicExceptionEnumeration.TOPIC_LIKE_UPDATE_FAILED.throwTopicException();
         }
         userService.update(likeHelper(tflag, this.userId));
-        return topicService.getById(topicId);
+        return service.getById(topicId);
     }
 }
