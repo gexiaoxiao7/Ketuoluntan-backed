@@ -1,11 +1,13 @@
 package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.TopicIdRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
-import com.suibe.suibe_mma.exception.TopicException;
+import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
+import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.suibe.suibe_mma.util.ControllerUtil.getCurrent;
 import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 
 /**
@@ -33,6 +36,9 @@ public class TopicController {
     @Resource
     private TopicService topicService;
 
+    @Resource
+    private ReplyService replyService;
+
     /**
      * 定义一个锁
      */
@@ -47,13 +53,18 @@ public class TopicController {
     public String upload(
             @RequestBody TopicUploadRequest topicUploadRequest,
             HttpServletRequest request) {
-        if (topicUploadRequest == null) {
-            return "请求失败";
-        }
+        HttpSession session = request.getSession();
         try {
-            request.getSession().setAttribute(UserService.USER_LOGIN_STATE, topicService.upload(topicUploadRequest));
+            if (topicUploadRequest == null) {
+                return "请求失败";
+            }
+            getCurrent(session);
+            session.setAttribute(
+                    UserService.USER_LOGIN_STATE,
+                    topicService.upload(topicUploadRequest)
+            );
             return "上传成功";
-        } catch (TopicException e) {
+        } catch (RuntimeException e) {
             return e.getMessage();
         }
     }
@@ -68,29 +79,22 @@ public class TopicController {
             @RequestBody Topic topic,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (topic == null) {
-            session.setAttribute("errMsg", "题目信息传递失败");
-            return null;
-        }
-        Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
-        if (o == null) {
-            session.setAttribute("errMsg", "当前无用户登录");
-            return null;
-        }
-        User originUser = (User) o;
-        Integer id = originUser.getId();
         try {
+            if (topic == null) {
+                throw new RuntimeException("题目信息传递失败");
+            }
+            User originUser = getCurrent(session);
+            Integer id = originUser.getId();
             lock.lock();
             Topic topic_plus = topicService.like(topic.getTopicId(), id);
             session.setAttribute("errMsg", null);
-            Integer integer = topicService.topicLikeHelp(topic_plus, id);
-            if (integer == 1) {
+            if (topicService.topicLikeHelp(topic_plus, id) == 1) {
                 session.setAttribute("topicId:" + topic_plus.getTopicId(), 1);
             } else {
                 session.setAttribute("topicId:" + topic_plus.getTopicId(), null);
             }
             return topic_plus;
-        } catch (TopicException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         } finally {
@@ -105,16 +109,10 @@ public class TopicController {
     public List<Topic> getTotalTopic(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
-            if (o == null) {
-                session.setAttribute("errMsg", "当前无用户登录");
-                return null;
-            }
-            User user = (User) o;
             QueryWrapper<Topic> wrapper = new QueryWrapper<>();
             wrapper.orderByDesc("createTime");
             List<Topic> list = topicService.list(wrapper);
-            Integer id = user.getId();
+            Integer id = getCurrent(session).getId();
             list.forEach(
                     topic -> {
                         Integer integer = topicService.topicLikeHelp(topic, id);
@@ -125,7 +123,7 @@ public class TopicController {
             );
             session.setAttribute("errMsg", null);
             return list;
-        } catch (TopicException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -139,15 +137,14 @@ public class TopicController {
             @RequestBody TopicIdRequest topicIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (topicIdRequest == null) {
-            session.setAttribute("errMsg", "题目id传递失败");
-            return null;
-        }
         try {
+            if (topicIdRequest == null) {
+                throw new RuntimeException("题目id传递失败");
+            }
             Topic topic = checkId(Topic.class, topicIdRequest.getTopicId(), topicService);
             session.setAttribute("errMsg", null);
             return topic;
-        } catch (TopicException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -161,17 +158,11 @@ public class TopicController {
     @GetMapping("/getMyTopic")
     public List<Topic> getMyTopic(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        Object originUser = session.getAttribute(UserService.USER_LOGIN_STATE);
-        if (originUser == null) {
-            session.setAttribute("errMsg", "当前无用户登录");
-            return null;
-        }
-        User user = (User) originUser;
         try {
-            List<Topic> list = topicService.getAllTopicByUserId(user.getId());
+            List<Topic> list = topicService.getAllTopicByUserId(getCurrent(session).getId());
             session.setAttribute("errMsg", null);
             return list;
-        } catch (TopicException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -188,15 +179,14 @@ public class TopicController {
             @RequestBody Topic topic,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (topic == null) {
-            session.setAttribute("errMsg", "题目信息传递失败");
-            return null;
-        }
         try {
+            if (topic == null) {
+                throw new RuntimeException("题目信息传递失败");
+            }
             User author = topicService.getAuthor(topic);
             session.setAttribute("errMsg", null);
             return author;
-        } catch (TopicException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -207,21 +197,24 @@ public class TopicController {
             @RequestBody TopicIdRequest topicIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (topicIdRequest == null) {
-            session.setAttribute("errMsg", "题目id传递失败");
-            return null;
-        }
-        Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
-        if (o == null) {
-            session.setAttribute("errMsg", "当前无用户登录");
-            return null;
-        }
-        User user = (User) o;
         try {
-            Long topicId = topicService.deleteByAuthor(topicIdRequest, user.getId());
+            if (topicIdRequest == null) {
+                throw new RuntimeException("题目id传递失败");
+            }
+            Topic topic = topicService.deleteByAuthor(topicIdRequest, getCurrent(session).getId());
+            List<Reply> topicReply = replyService.getTopicReply(topic);
+            topicReply.forEach(reply -> {
+                reply.setUpdateTime(null);
+                session.setAttribute("replyId:" + reply.getReplyId(), null);
+            });
+            if (!replyService.removeBatchByIds(topicReply)) {
+                TopicExceptionEnumeration.TOPIC_REMOVE_REPLY_FAILED.throwTopicException();
+            }
+            Long topicId = topic.getTopicId();
+            session.setAttribute("topicId:" + topicId, null);
             session.setAttribute("errMsg", null);
             return topicId;
-        } catch (TopicException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }

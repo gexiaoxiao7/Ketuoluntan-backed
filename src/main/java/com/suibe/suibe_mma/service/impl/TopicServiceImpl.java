@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.TopicIdRequest;
@@ -10,6 +11,7 @@ import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.TopicMapper;
+import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import com.suibe.suibe_mma.util.ServiceUtil;
@@ -131,7 +133,7 @@ public class TopicServiceImpl
     }
 
     @Override
-    public Long deleteByAuthor(
+    public Topic deleteByAuthor(
             @NotNull TopicIdRequest topicIdRequest,
             Integer userId) throws TopicException {
         try {
@@ -145,7 +147,7 @@ public class TopicServiceImpl
             } else {
                 TopicExceptionEnumeration.TOPIC_USERID_MATCH_FAILED.throwTopicException();
             }
-            return topicId;
+            return topic;
         } catch (RuntimeException e) {
             throw new TopicException(e.getMessage(), e);
         }

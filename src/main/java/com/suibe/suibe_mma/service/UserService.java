@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
+import com.suibe.suibe_mma.domain.request.UserIdRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.exception.UserException;
@@ -71,4 +72,11 @@ public interface UserService
      * @throws UserException 新旧密码格式错误或一致，新密码与校验码不一致，用户id无效或为空，更新密码失败
      */
     User changePassword(UserChangePasswordRequest request) throws UserException;
+
+    /**
+     * 封号用户
+     * @param userIdRequest 用户id类
+     * @throws UserException 该用户已被封，id无效或为空，封号失败
+     */
+    void sealUser(UserIdRequest userIdRequest) throws UserException;
 }

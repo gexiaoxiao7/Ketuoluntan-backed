@@ -65,10 +65,10 @@ public interface TopicService
      * 题目作者删除题目
      * @param topicIdRequest 题目id类
      * @param userId 用户唯一标识
-     * @return 题目id
+     * @return 题目信息
      * @throws TopicException 作者id无效或为空，删除题目失败，id不匹配
      */
-    Long deleteByAuthor(
+    Topic deleteByAuthor(
             TopicIdRequest topicIdRequest,
             Integer userId) throws TopicException;
 }

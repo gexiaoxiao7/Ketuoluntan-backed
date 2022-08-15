@@ -14,6 +14,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import static com.suibe.suibe_mma.util.ControllerUtil.getCurrent;
 import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 
 /**
@@ -36,7 +37,7 @@ public class UserController {
      * @return 相关信息
      */
     @PostMapping("/register")
-    public String userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public String register(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
             return "请求失败";
         }
@@ -56,21 +57,22 @@ public class UserController {
      * @return 用户安全信息
      */
     @PostMapping("/login")
-    public User userLogin(
+    public User login(
             @RequestBody UserLoginRequest userLoginRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (userLoginRequest == null) {
-            session.setAttribute(userService.USER_LOGIN_STATE, null);
-            session.setAttribute("errMsg", "请求失败");
-            return null;
-        }
         try {
+            if (userLoginRequest == null) {
+                throw new RuntimeException("请求失败");
+            }
             User user = userService.login(userLoginRequest);
+            if (user.getUserRole() == 2) {
+                throw new RuntimeException("该用户已被封号");
+            }
             session.setAttribute(userService.USER_LOGIN_STATE, user);
             session.setAttribute("errMsg", null);
             return user;
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             session.setAttribute(userService.USER_LOGIN_STATE, null);
             session.setAttribute("errMsg", e.getMessage());
             return null;
@@ -86,17 +88,11 @@ public class UserController {
     @GetMapping("/current")
     public User getCurrentUser(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        Object originUser = session.getAttribute(UserService.USER_LOGIN_STATE);
-        if (originUser == null) {
-            session.setAttribute("errMsg", "无用户登录");
-            return null;
-        }
-        User currentUser = (User) originUser;
         try {
-            User safetyUser = userService.checkCurrentUser(currentUser);
+            User safetyUser = userService.checkCurrentUser(getCurrent(session));
             session.setAttribute("errMsg", null);
             return safetyUser;
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -111,15 +107,14 @@ public class UserController {
             @RequestBody UserIdRequest userIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (userIdRequest == null) {
-            session.setAttribute("errMsg", "用户id传递失败");
-            return null;
-        }
         try {
+            if (userIdRequest == null) {
+                throw new RuntimeException("用户id传递失败");
+            }
             User user = checkId(User.class, userIdRequest.getUserId(), userService);
             session.setAttribute("errMsg", null);
             return user;
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -136,29 +131,25 @@ public class UserController {
             @RequestBody User user,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (user == null) {
-            session.setAttribute("errMsg", "请求失败");
-            return null;
-        }
-        User originUser = (User) session.getAttribute(UserService.USER_LOGIN_STATE);
-        if (originUser == null) {
-            session.setAttribute("errMsg", "用户未登录");
-            return null;
-        }
-        if (originUser.equals(user)) {
-            session.setAttribute("errMsg", "用户信息无变动");
-            return null;
-        }
-        if (user.getUserPassword() != null) {
-            session.setAttribute("errMsg", "该功能不提供修改密码需求");
-            return null;
-        }
         try {
+            if (user == null) {
+                throw new RuntimeException("请求失败");
+            }
+            User originUser = getCurrent(session);
+            if (originUser.equals(user)) {
+                throw new RuntimeException("用户信息无变动");
+            }
+            if (!originUser.getUserRole().equals(user.getUserRole())) {
+                throw new RuntimeException("该功能不提供修改用户角色需求");
+            }
+            if (user.getUserPassword() != null) {
+                throw new RuntimeException("该功能不提供修改密码需求");
+            }
             User userInfo = userService.updateUserInfo(user);
             session.setAttribute("errMsg", null);
             session.setAttribute(UserService.USER_LOGIN_STATE, userInfo);
             return userInfo;
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -172,12 +163,14 @@ public class UserController {
     @GetMapping("/logout")
     public String logout(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (getCurrentUser(request) == null) {
-            return "用户未登录";
+        try {
+            getCurrent(session);
+            session.setAttribute(UserService.USER_LOGIN_STATE, null);
+            session.setAttribute("errMsg", null);
+            return "用户退出成功";
+        } catch (RuntimeException e) {
+            return e.getMessage();
         }
-        session.setAttribute(UserService.USER_LOGIN_STATE, null);
-        session.setAttribute("errMsg", null);
-        return "用户已退出";
     }
 
     /**
@@ -188,17 +181,41 @@ public class UserController {
     @PostMapping("/changePassword")
     public String changePassword(
             @RequestBody UserChangePasswordRequest userChangePasswordRequest,
-            HttpServletRequest request) {
-        if (userChangePasswordRequest == null) {
-            return "请求失败";
-        }
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
         try {
-            request
-                    .getSession()
-                    .setAttribute(UserService.USER_LOGIN_STATE, userService.changePassword(userChangePasswordRequest));
+            if (userChangePasswordRequest == null) {
+                return "请求失败";
+            }
+            getCurrent(session);
+            session.setAttribute(
+                    UserService.USER_LOGIN_STATE,
+                    userService.changePassword(userChangePasswordRequest)
+            );
             return "修改密码成功";
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             return e.getMessage();
+        }
+    }
+
+    @PostMapping("/sealUser")
+    public Integer sealUser(
+            @RequestBody UserIdRequest userIdRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            if (userIdRequest == null) {
+                throw new RuntimeException("用户id传递失败");
+            }
+            if (getCurrent(session).getUserRole() != 1) {
+                throw new RuntimeException("当前用户不为管理员，操作失败");
+            }
+            userService.sealUser(userIdRequest);
+            session.setAttribute("errMsg", null);
+            return userIdRequest.getUserId();
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
         }
     }
 }

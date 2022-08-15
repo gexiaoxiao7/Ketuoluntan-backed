@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
+import com.suibe.suibe_mma.domain.request.UserIdRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
 import com.suibe.suibe_mma.enumeration.UserExceptionEnumeration;
@@ -88,6 +89,9 @@ public class UserServiceImpl
             Integer userId = currentUser.getId();
             User getUser = checkId(User.class, userId, this);
             if (!getUser.equals(currentUser)) {
+                if (getUser.getUserRole() == 2) {
+                    UserExceptionEnumeration.USER_SEALED.throwUserException();
+                }
                 UserExceptionEnumeration.USER_INFORMATION_WRONG.throwUserException();
             }
             return currentUser;
@@ -169,6 +173,26 @@ public class UserServiceImpl
             UserExceptionEnumeration.USER_OLD_PASSWORD_FORMAT_WRONG.throwUserException();
         }
         return null;
+    }
+
+    @Override
+    public void sealUser(UserIdRequest userIdRequest) throws UserException {
+        try {
+            User user = checkId(User.class, userIdRequest.getUserId(), this);
+            if (user.getUserRole() == 2) {
+                UserExceptionEnumeration.USER_SEALED.throwUserException();
+            }
+            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+            wrapper
+                    .eq("id", user.getId())
+                    .set("userRole", 2)
+                    .setSql("updateTime = now()");
+            if (!update(wrapper)) {
+                UserExceptionEnumeration.USER_SEAL_FAILED.throwUserException();
+            }
+        } catch (RuntimeException e) {
+            throw new UserException(e.getMessage(), e);
+        }
     }
 
 }

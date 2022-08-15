@@ -7,7 +7,6 @@ import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.service.ReplyService;
-import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +16,8 @@ import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static com.suibe.suibe_mma.util.ControllerUtil.getCurrent;
 
 /**
  * 回复相关操作类
@@ -43,10 +44,10 @@ public class ReplyController {
      */
     @PostMapping("/writeReply")
     public String writeReply(@RequestBody ReplyWriteRequest replyWriteRequest) {
-        if (replyWriteRequest == null) {
-            return "请求失败";
-        }
         try {
+            if (replyWriteRequest == null) {
+                return "请求失败";
+            }
             replyService.writeReply(replyWriteRequest);
             return "回复成功";
         } catch (ReplyException e) {
@@ -62,17 +63,11 @@ public class ReplyController {
     @GetMapping("/getMyReply")
     public List<Reply> getMyReply(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        Object originUser = session.getAttribute(UserService.USER_LOGIN_STATE);
-        if (originUser == null) {
-            session.setAttribute("errMsg", "当前无用户登录");
-            return null;
-        }
-        User user = (User) originUser;
         try {
-            List<Reply> list = replyService.getAllReplyByUserId(user.getId());
+            List<Reply> list = replyService.getAllReplyByUserId(getCurrent(session).getId());
             session.setAttribute("errMsg", null);
             return list;
-        } catch (ReplyException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -89,19 +84,12 @@ public class ReplyController {
             @RequestBody Reply reply,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (reply == null) {
-            session.setAttribute("errMsg", "回复信息传递失败");
-            return null;
-        }
-        Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
-        if (o == null) {
-            session.setAttribute("errMsg", "当前无用户登录");
-            return null;
-        }
-        User originUser = (User) o;
         try {
+            if (reply == null) {
+                throw new RuntimeException("回复信息传递失败");
+            }
             lock.lock();
-            Integer id = originUser.getId();
+            Integer id = getCurrent(session).getId();
             Reply reply_plus = replyService.like(reply.getReplyId(), id);
             session.setAttribute("errMsg", null);
             Integer integer = replyService.replyLikeHelp(reply_plus, id);
@@ -111,7 +99,7 @@ public class ReplyController {
                 session.setAttribute("replyId:" + reply_plus.getReplyId(), null);
             }
             return reply_plus;
-        } catch (ReplyException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         } finally {
@@ -130,18 +118,11 @@ public class ReplyController {
             @RequestBody Topic topic,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (topic == null) {
-            session.setAttribute("errMsg", "请求失败");
-            return null;
-        }
         try {
-            Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
-            if (o == null) {
-                session.setAttribute("errMsg", "当前无用户登录");
-                return null;
+            if (topic == null) {
+                throw new RuntimeException("题目信息传递失败");
             }
-            User user = (User) o;
-            Integer id = user.getId();
+            Integer id = getCurrent(session).getId();
             List<Reply> replies = replyService.getTopicReply(topic);
             replies.forEach(
                     reply -> {
@@ -153,7 +134,7 @@ public class ReplyController {
             );
             session.setAttribute("errMsg", null);
             return replies;
-        } catch (ReplyException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -170,15 +151,14 @@ public class ReplyController {
             @RequestBody Reply reply,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (reply == null) {
-            session.setAttribute("errMsg", "回复信息传递失败");
-            return null;
-        }
         try {
+            if (reply == null) {
+                throw new RuntimeException("回复信息传递失败");
+            }
             User author = replyService.getAuthor(reply);
             session.setAttribute("errMsg", null);
             return author;
-        } catch (ReplyException e) {
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
@@ -195,21 +175,15 @@ public class ReplyController {
             @RequestBody ReplyIdRequest replyIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (replyIdRequest == null) {
-            session.setAttribute("errMsg", "回复id传递失败");
-            return null;
-        }
-        Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
-        if (o == null) {
-            session.setAttribute("errMsg", "当前无用户登录");
-            return null;
-        }
-        User user = (User) o;
         try {
-            Long aLong = replyService.deleteByAuthor(replyIdRequest, user.getId());
+            if (replyIdRequest == null) {
+                throw new RuntimeException("回复id传递失败");
+            }
+            Long replyId = replyService.deleteByAuthor(replyIdRequest, getCurrent(session).getId());
+            session.setAttribute("replyId:" + replyId, null);
             session.setAttribute("errMsg", null);
-            return aLong;
-        } catch (ReplyException e) {
+            return replyId;
+        } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }

@@ -65,7 +65,15 @@ public enum  UserExceptionEnumeration {
     /**
      * 密码修改失败
      */
-    USER_PASSWORD_CHANGE_FAILED("密码修改失败");
+    USER_PASSWORD_CHANGE_FAILED("密码修改失败"),
+    /**
+     * 用户已被封号
+     */
+    USER_SEALED("用户已被封号"),
+    /**
+     * 用户封号失败
+     */
+    USER_SEAL_FAILED("用户封号失败");
 
     /**
      * 异常信息

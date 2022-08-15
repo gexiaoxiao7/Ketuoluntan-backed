@@ -89,9 +89,9 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test6() {
-        Topic topic = topicService.getById(1);
-        replyService.getTopicReply(topic).forEach(System.out::println);
-
+        List<Reply> topicReply = replyService.getTopicReply(topicService.getById(1));
+        topicReply.forEach(reply -> reply.setUpdateTime(null));
+        replyService.removeBatchByIds(topicReply);
     }
 
 }

@@ -37,7 +37,11 @@ public enum TopicExceptionEnumeration {
     /**
      * 题目作者id不匹配
      */
-    TOPIC_USERID_MATCH_FAILED("题目作者id不匹配");
+    TOPIC_USERID_MATCH_FAILED("题目作者id不匹配"),
+    /**
+     * 相关题目回复删除失败
+     */
+    TOPIC_REMOVE_REPLY_FAILED("相关题目回复删除失败");
 
     /**
      * 异常信息
