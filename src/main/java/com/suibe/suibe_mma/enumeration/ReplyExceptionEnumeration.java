@@ -30,7 +30,15 @@ public enum ReplyExceptionEnumeration {
     /**
      * 题目回复数修改失败
      */
-    REPLY_TOPIC_REPLYNUM_ADD_FAILED("题目回复数修改失败");
+    REPLY_TOPIC_REPLYNUM_ADD_FAILED("题目回复数修改失败"),
+    /**
+     * 回复删除失败
+     */
+    REPLY_REMOVE_FAILED("回复删除失败"),
+    /**
+     * 回复作者id不匹配
+     */
+    REPLY_USERID_MATCH_FALIED("回复作者id不匹配");
 
     /**
      * 异常信息

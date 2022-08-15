@@ -8,7 +8,8 @@ import java.io.Serializable;
  * 题目上传请求类
  */
 @Data
-public class TopicUploadRequest implements Serializable {
+public class TopicUploadRequest
+        implements Serializable {
     /**
      * 题目标题
      */

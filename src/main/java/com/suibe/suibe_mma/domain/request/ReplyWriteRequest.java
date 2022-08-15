@@ -8,7 +8,8 @@ import java.io.Serializable;
  * 写回复相关配置信息类
  */
 @Data
-public class ReplyWriteRequest implements Serializable {
+public class ReplyWriteRequest
+        implements Serializable {
 
     /**
      * 回复的题目id

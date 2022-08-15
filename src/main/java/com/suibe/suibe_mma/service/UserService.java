@@ -10,7 +10,8 @@ import com.suibe.suibe_mma.domain.User;
 /**
  * 用户服务类接口
  */
-public interface UserService extends IService<User> {
+public interface UserService
+        extends IService<User> {
     /**
      * 加密盐值
      */
@@ -59,7 +60,9 @@ public interface UserService extends IService<User> {
      * @return 更新后用户信息
      * @throws UserException 增加用户积分失败
      */
-    User changeScore(User user, Integer score) throws UserException;
+    User changeScore(
+            User user,
+            Integer score) throws UserException;
 
     /**
      * 修改密码

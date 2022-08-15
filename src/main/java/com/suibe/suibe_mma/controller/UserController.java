@@ -14,7 +14,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import static com.suibe.suibe_mma.util.ServiceUtil.checkUserId;
+import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 
 /**
  * 用户相关操作控制类
@@ -56,7 +56,9 @@ public class UserController {
      * @return 用户安全信息
      */
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, @NotNull HttpServletRequest request) {
+    public User userLogin(
+            @RequestBody UserLoginRequest userLoginRequest,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (userLoginRequest == null) {
             session.setAttribute(userService.USER_LOGIN_STATE, null);
@@ -105,14 +107,16 @@ public class UserController {
      * @return 用户信息
      */
     @PostMapping("/searchByUserId")
-    public User searchByUserId(@RequestBody UserIdRequest userIdRequest, @NotNull HttpServletRequest request) {
+    public User searchByUserId(
+            @RequestBody UserIdRequest userIdRequest,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (userIdRequest == null) {
             session.setAttribute("errMsg", "用户id传递失败");
             return null;
         }
         try {
-            User user = checkUserId(userIdRequest.getUserId(), userService);
+            User user = checkId(User.class, userIdRequest.getUserId(), userService);
             session.setAttribute("errMsg", null);
             return user;
         } catch (UserException e) {
@@ -128,7 +132,9 @@ public class UserController {
      * @return 更新后的用户信息
      */
     @PostMapping("/update")
-    public User updateUserInfo(@RequestBody User user, @NotNull HttpServletRequest request) {
+    public User updateUserInfo(
+            @RequestBody User user,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (user == null) {
             session.setAttribute("errMsg", "请求失败");

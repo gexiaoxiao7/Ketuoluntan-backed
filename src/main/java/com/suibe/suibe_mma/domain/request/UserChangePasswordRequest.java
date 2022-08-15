@@ -8,7 +8,8 @@ import java.io.Serializable;
  * 用户修改密码信息类
  */
 @Data
-public class UserChangePasswordRequest implements Serializable {
+public class UserChangePasswordRequest
+        implements Serializable {
 
     /**
      * 用户唯一标识

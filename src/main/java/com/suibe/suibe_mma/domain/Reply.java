@@ -2,10 +2,10 @@ package com.suibe.suibe_mma.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
 import com.suibe.suibe_mma.exception.ReplyException;
-import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.UserService;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
@@ -22,12 +22,16 @@ import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
  */
 @Data
 @TableName("mma_reply")
-public class Reply implements Serializable, Likable<Reply> {
+public class Reply
+        implements Serializable, Likable<Reply>, Checkable<Reply, Long> {
 
     /**
      * 回复唯一标识
      */
-    @TableId(value = "replyId", type = IdType.AUTO)
+    @TableId(
+            value = "replyId",
+            type = IdType.AUTO
+    )
     private Long replyId;
 
     /**
@@ -63,13 +67,19 @@ public class Reply implements Serializable, Likable<Reply> {
     /**
      * 创建时间
      */
-    @TableField(value = "createTime", fill = FieldFill.INSERT)
+    @TableField(
+            value = "createTime",
+            fill = FieldFill.INSERT
+    )
     private Date createTime;
 
     /**
      * 更新时间
      */
-    @TableField(value = "updateTime", fill = FieldFill.INSERT_UPDATE)
+    @TableField(
+            value = "updateTime",
+            fill = FieldFill.INSERT_UPDATE
+    )
     private Date updateTime;
 
     /**
@@ -109,5 +119,19 @@ public class Reply implements Serializable, Likable<Reply> {
         }
         userService.update(likeHelper(rflag, this.userId));
         return service.getById(replyId);
+    }
+
+    @Override
+    public Reply checkPrimaryKey(
+            Long id,
+            IService<Reply> service) throws ReplyException {
+        if (id == null) {
+            ReplyExceptionEnumeration.REPLY_ID_IS_NULL.throwReplyException();
+        }
+        Reply reply = service.getById(id);
+        if (reply == null) {
+            ReplyExceptionEnumeration.REPLY_ID_IS_WRONG.throwReplyException();
+        }
+        return reply;
     }
 }

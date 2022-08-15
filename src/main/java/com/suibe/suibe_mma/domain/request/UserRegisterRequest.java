@@ -8,7 +8,8 @@ import java.io.Serializable;
  * 用户注册信息类
  */
 @Data
-public class UserRegisterRequest implements Serializable {
+public class UserRegisterRequest
+        implements Serializable {
 
     /**
      * 序列化id

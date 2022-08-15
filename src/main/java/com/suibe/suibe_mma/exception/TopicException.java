@@ -3,7 +3,8 @@ package com.suibe.suibe_mma.exception;
 /**
  * 题目异常信息类
  */
-public class TopicException extends RuntimeException {
+public class TopicException
+        extends RuntimeException {
     /**
      * message构造方法
      * @param message 异常信息

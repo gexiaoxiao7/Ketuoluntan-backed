@@ -4,11 +4,20 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 传递题目id
+ */
 @Data
-public class TopicIdRequest implements Serializable {
+public class TopicIdRequest
+        implements Serializable {
 
+    /**
+     * 序列化id
+     */
+    private static final long serialVersionUID = 1L;
 
-    private static final long serialVersionUID = -6997068719817136318L;
-
+    /**
+     * 题目唯一标识
+     */
     private Long topicId;
 }

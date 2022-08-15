@@ -3,10 +3,7 @@ package com.suibe.suibe_mma;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
-import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
-import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
-import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
-import com.suibe.suibe_mma.domain.request.UserLoginRequest;
+import com.suibe.suibe_mma.domain.request.*;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.service.ReplyService;
@@ -95,12 +92,6 @@ class SuibeMmaApplicationTests {
         Topic topic = topicService.getById(1);
         replyService.getTopicReply(topic).forEach(System.out::println);
 
-    }
-
-    @Test
-    void test7() {
-        Topic like = topicService.like(1L, 1);
-        System.out.println(like);
     }
 
 }

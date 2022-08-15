@@ -2,13 +2,13 @@ package com.suibe.suibe_mma.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.suibe.suibe_mma.domain.User;
-import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 /**
  * 用户mapper类
  */
-public interface UserMapper extends BaseMapper<User> {
+public interface UserMapper
+        extends BaseMapper<User> {
     /**
      * 根据userAccount查询用户是否存在
      * @param userAccount 账户名

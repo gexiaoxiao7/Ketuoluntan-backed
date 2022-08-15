@@ -5,10 +5,10 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * 传递用户id
+ * 传递回复id
  */
 @Data
-public class UserIdRequest
+public class ReplyIdRequest
         implements Serializable {
 
     /**
@@ -17,7 +17,7 @@ public class UserIdRequest
     private static final long serialVersionUID = 1L;
 
     /**
-     * 用户唯一标识
+     * 回复唯一标识
      */
-    private Integer userId;
+    private Long replyId;
 }

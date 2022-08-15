@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
 import com.suibe.suibe_mma.exception.TopicException;
@@ -24,12 +25,15 @@ import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 @Data
 @EqualsAndHashCode(exclude = {"topicLikes"})
 @TableName("mma_topic")
-public class Topic implements Serializable, Likable<Topic> {
+public class Topic
+        implements Serializable, Likable<Topic>, Checkable<Topic, Long> {
 
     /**
      * 题目唯一标识
      */
-    @TableId(value = "topicId", type = IdType.AUTO)
+    @TableId(
+            value = "topicId",
+            type = IdType.AUTO)
     private Long topicId;
 
     /**
@@ -59,13 +63,19 @@ public class Topic implements Serializable, Likable<Topic> {
     /**
      * 创建时间
      */
-    @TableField(value = "createTime", fill = FieldFill.INSERT)
+    @TableField(
+            value = "createTime",
+            fill = FieldFill.INSERT
+    )
     private Date createTime;
 
     /**
      * 更新时间
      */
-    @TableField(value = "updateTime", fill = FieldFill.INSERT_UPDATE)
+    @TableField(
+            value = "updateTime",
+            fill = FieldFill.INSERT_UPDATE
+    )
     private Date updateTime;
 
     /**
@@ -117,5 +127,19 @@ public class Topic implements Serializable, Likable<Topic> {
         }
         userService.update(likeHelper(tflag, this.userId));
         return service.getById(topicId);
+    }
+
+    @Override
+    public Topic checkPrimaryKey(
+            Long id,
+            IService<Topic> service) throws RuntimeException {
+        if (id == null) {
+            TopicExceptionEnumeration.TOPIC_ID_IS_NULL.throwTopicException();
+        }
+        Topic topic = service.getById(id);
+        if (topic == null) {
+            TopicExceptionEnumeration.TOPIC_ID_IS_WRONG.throwTopicException();
+        }
+        return topic;
     }
 }

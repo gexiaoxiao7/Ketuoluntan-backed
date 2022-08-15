@@ -15,7 +15,8 @@ import java.util.Date;
  */
 @Slf4j
 @Component
-public class CreateAndUpdateMetaObjectHandler implements MetaObjectHandler {
+public class CreateAndUpdateMetaObjectHandler
+        implements MetaObjectHandler {
     /**
      * 重写insertFill方法，实现添加时自动添加创建时间与更新时间
      * @param metaObject 元对象

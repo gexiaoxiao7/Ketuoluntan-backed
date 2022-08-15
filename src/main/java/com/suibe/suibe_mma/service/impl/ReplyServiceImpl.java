@@ -7,6 +7,7 @@ import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.able.Likable;
+import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
 import com.suibe.suibe_mma.exception.ReplyException;
@@ -19,7 +20,6 @@ import com.suibe.suibe_mma.service.UserService;
 import com.suibe.suibe_mma.util.ServiceUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,8 +33,13 @@ import static com.suibe.suibe_mma.util.ServiceUtil.*;
  * 回复服务类实现类
  */
 @Service
-@Transactional(rollbackFor = {ReplyException.class}, noRollbackFor = {UserException.class, TopicException.class})
-public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements ReplyService {
+@Transactional(
+        rollbackFor = {ReplyException.class},
+        noRollbackFor = {UserException.class, TopicException.class}
+        )
+public class ReplyServiceImpl
+        extends ServiceImpl<ReplyMapper, Reply>
+        implements ReplyService {
     /**
      * 注入userService
      */
@@ -59,8 +64,8 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
         Long topicId = replyWriteRequest.getTopicId();
         String replyContent = replyWriteRequest.getReplyContent();
         try {
-            checkUserId(userId, userService);
-            checkTopicId(topicId, topicService);
+            checkId(User.class, userId, userService);
+            checkId(Topic.class, topicId, topicService);
             if (replyContent == null || "".equals(replyContent)) {
                 ReplyExceptionEnumeration.REPLY_CONTENT_IS_EMPTY.throwReplyException();
             }
@@ -79,7 +84,7 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
             if (!topicService.update(wrapper)) {
                 ReplyExceptionEnumeration.REPLY_TOPIC_REPLYNUM_ADD_FAILED.throwReplyException();
             }
-        } catch (UserException | TopicException e) {
+        } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
     }
@@ -87,20 +92,22 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
     @Override
     public List<Reply> getAllReplyByUserId(Integer id) throws ReplyException {
         try {
-            checkUserId(id, userService);
+            checkId(User.class, id, userService);
             QueryWrapper<Reply> wrapper = new QueryWrapper<>();
             wrapper.eq("userId", id);
             return list(wrapper);
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
     }
 
     @Override
-    public Reply like(Long replyId, Integer userId) throws ReplyException {
+    public Reply like(
+            Long replyId,
+            Integer userId) throws ReplyException {
         try {
-            checkUserId(userId, userService);
-            Reply reply = checkReplyId(replyId, this);
+            checkId(User.class, userId, userService);
+            Reply reply = checkId(Reply.class, replyId, this);
             String key = "suibe:mma:replyId:" + replyId;
             return ServiceUtil.like(userId, template, key, reply, this, userService);
         } catch (RuntimeException e) {
@@ -112,13 +119,13 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
     public List<Reply> getTopicReply(@NotNull Topic topic) throws ReplyException {
         try {
             Long topicId = topic.getTopicId();
-            checkTopicId(topicId, topicService);
+            checkId(Topic.class, topicId, topicService);
             QueryWrapper<Reply> wrapper = new QueryWrapper<>();
             wrapper
                     .eq("topicId", topicId)
                     .orderByDesc("replyLikes");
             return list(wrapper);
-        } catch (TopicException e) {
+        } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
     }
@@ -127,23 +134,46 @@ public class ReplyServiceImpl extends ServiceImpl<ReplyMapper, Reply> implements
     public User getAuthor(@NotNull Reply reply) throws ReplyException {
         try {
             Long replyId = reply.getReplyId();
-            Reply reply1 = checkReplyId(replyId, this);
+            Reply reply1 = checkId(Reply.class, replyId, this);
             if (reply.equals(reply1)) {
-                return checkUserId(reply.getUserId(), userService);
+                return checkId(User.class, reply.getUserId(), userService);
             }
             ReplyExceptionEnumeration.REPLY_MESSAGE_WRONG.throwReplyException();
             return null;
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
     }
 
     @Override
-    public Integer replyLikeHelp(@NotNull Reply reply, Integer id) throws ReplyException {
+    public Integer replyLikeHelp(
+            @NotNull Reply reply,
+            Integer id) throws ReplyException {
         try {
-            checkUserId(id, userService);
+            checkId(User.class, id, userService);
             return likeOrNot(id, template, "suibe:mma:replyId:" + reply.getReplyId());
-        } catch (UserException e) {
+        } catch (RuntimeException e) {
+            throw new ReplyException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Long deleteByAuthor(
+            @NotNull ReplyIdRequest replyIdRequest,
+            Integer userId) throws ReplyException {
+        try {
+            Long replyId = replyIdRequest.getReplyId();
+            checkId(User.class, userId, userService);
+            Reply reply = checkId(Reply.class, replyId, this);
+            if (reply.getUserId().equals(userId)) {
+                if (!removeById(reply)) {
+                    ReplyExceptionEnumeration.REPLY_REMOVE_FAILED.throwReplyException();
+                }
+            } else {
+                ReplyExceptionEnumeration.REPLY_USERID_MATCH_FALIED.throwReplyException();
+            }
+            return replyId;
+        } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
     }

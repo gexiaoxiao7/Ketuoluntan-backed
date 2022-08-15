@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 能够进行点赞类继承的接口
+ * @param <T> 表类
  */
 public interface Likable<T extends Likable<T>> {
     /**

@@ -3,7 +3,8 @@ package com.suibe.suibe_mma.exception;
 /**
  * 回复异常类
  */
-public class ReplyException extends RuntimeException {
+public class ReplyException
+        extends RuntimeException {
     /**
      * message构造方法
      * @param message 异常信息

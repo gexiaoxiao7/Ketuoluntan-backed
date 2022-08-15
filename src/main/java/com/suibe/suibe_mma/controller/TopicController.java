@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static com.suibe.suibe_mma.util.ServiceUtil.checkTopicId;
+import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 
 /**
  * 题目相关操作控制类
@@ -44,7 +44,9 @@ public class TopicController {
      * @return 上传是否成功提示信息
      */
     @PostMapping("/upload")
-    public String upload(@RequestBody TopicUploadRequest topicUploadRequest, HttpServletRequest request) {
+    public String upload(
+            @RequestBody TopicUploadRequest topicUploadRequest,
+            HttpServletRequest request) {
         if (topicUploadRequest == null) {
             return "请求失败";
         }
@@ -62,7 +64,9 @@ public class TopicController {
      * @return 题目信息
      */
     @PostMapping("/like")
-    public Topic like(@RequestBody Topic topic, @NotNull HttpServletRequest request) {
+    public Topic like(
+            @RequestBody Topic topic,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (topic == null) {
             session.setAttribute("errMsg", "题目信息传递失败");
@@ -131,14 +135,16 @@ public class TopicController {
      * 根据题目Id获取题目信息
      */
     @PostMapping("/getTopicById")
-    public Topic getTopicById(@RequestBody TopicIdRequest topicIdRequest, HttpServletRequest request) {
+    public Topic getTopicById(
+            @RequestBody TopicIdRequest topicIdRequest,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (topicIdRequest == null) {
             session.setAttribute("errMsg", "题目id传递失败");
             return null;
         }
         try {
-            Topic topic = checkTopicId(topicIdRequest.getTopicId(), topicService);
+            Topic topic = checkId(Topic.class, topicIdRequest.getTopicId(), topicService);
             session.setAttribute("errMsg", null);
             return topic;
         } catch (TopicException e) {
@@ -178,7 +184,9 @@ public class TopicController {
      * @return 作者信息
      */
     @PostMapping("/getAuthor")
-    public User getAuthor(@RequestBody Topic topic, HttpServletRequest request) {
+    public User getAuthor(
+            @RequestBody Topic topic,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (topic == null) {
             session.setAttribute("errMsg", "题目信息传递失败");
@@ -188,6 +196,31 @@ public class TopicController {
             User author = topicService.getAuthor(topic);
             session.setAttribute("errMsg", null);
             return author;
+        } catch (TopicException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    @PostMapping("/deleteByAuthor")
+    public Long deleteByAuthor(
+            @RequestBody TopicIdRequest topicIdRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (topicIdRequest == null) {
+            session.setAttribute("errMsg", "题目id传递失败");
+            return null;
+        }
+        Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
+        if (o == null) {
+            session.setAttribute("errMsg", "当前无用户登录");
+            return null;
+        }
+        User user = (User) o;
+        try {
+            Long topicId = topicService.deleteByAuthor(topicIdRequest, user.getId());
+            session.setAttribute("errMsg", null);
+            return topicId;
         } catch (TopicException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;

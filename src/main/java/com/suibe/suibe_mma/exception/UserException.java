@@ -3,7 +3,8 @@ package com.suibe.suibe_mma.exception;
 /**
  * 用户相关操作异常
  */
-public class UserException extends RuntimeException {
+public class UserException
+        extends RuntimeException {
     /**
      * message构造方法
      * @param message 异常信息

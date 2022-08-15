@@ -3,6 +3,7 @@ package com.suibe.suibe_mma.controller;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.service.ReplyService;
@@ -84,7 +85,9 @@ public class ReplyController {
      * @return 更新后回复信息
      */
     @PostMapping("/like")
-    public Reply like(@RequestBody Reply reply, @NotNull HttpServletRequest request) {
+    public Reply like(
+            @RequestBody Reply reply,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (reply == null) {
             session.setAttribute("errMsg", "回复信息传递失败");
@@ -123,7 +126,9 @@ public class ReplyController {
      * @return 回复列表
      */
     @PostMapping("/getTopicReply")
-    public List<Reply> getTopicReply(@RequestBody Topic topic, @NotNull HttpServletRequest request) {
+    public List<Reply> getTopicReply(
+            @RequestBody Topic topic,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (topic == null) {
             session.setAttribute("errMsg", "请求失败");
@@ -161,7 +166,9 @@ public class ReplyController {
      * @return 作者信息
      */
     @PostMapping("/getAuthor")
-    public User getAuthor(@RequestBody Reply reply, @NotNull HttpServletRequest request) {
+    public User getAuthor(
+            @RequestBody Reply reply,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (reply == null) {
             session.setAttribute("errMsg", "回复信息传递失败");
@@ -171,6 +178,37 @@ public class ReplyController {
             User author = replyService.getAuthor(reply);
             session.setAttribute("errMsg", null);
             return author;
+        } catch (ReplyException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 回复作者删除该回复
+     * @param replyIdRequest 回复id
+     * @param request 请求域对象
+     * @return 回复id
+     */
+    @PostMapping("/deleteByAuthor")
+    public Long deleteByAuthor(
+            @RequestBody ReplyIdRequest replyIdRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        if (replyIdRequest == null) {
+            session.setAttribute("errMsg", "回复id传递失败");
+            return null;
+        }
+        Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
+        if (o == null) {
+            session.setAttribute("errMsg", "当前无用户登录");
+            return null;
+        }
+        User user = (User) o;
+        try {
+            Long aLong = replyService.deleteByAuthor(replyIdRequest, user.getId());
+            session.setAttribute("errMsg", null);
+            return aLong;
         } catch (ReplyException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;

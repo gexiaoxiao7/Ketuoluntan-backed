@@ -24,7 +24,9 @@ import static com.suibe.suibe_mma.util.ServiceUtil.*;
  */
 @Service
 @Transactional(rollbackFor = {UserException.class})
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl
+        extends ServiceImpl<UserMapper, User>
+        implements UserService {
     /**
      * 注入userMapper
      */
@@ -82,37 +84,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User checkCurrentUser(@NotNull User currentUser) throws UserException {
-        Integer userId = currentUser.getId();
-        User getUser = checkUserId(userId, this);
-        if (!getUser.equals(currentUser)) {
-            UserExceptionEnumeration.USER_INFORMATION_WRONG.throwUserException();
+        try {
+            Integer userId = currentUser.getId();
+            User getUser = checkId(User.class, userId, this);
+            if (!getUser.equals(currentUser)) {
+                UserExceptionEnumeration.USER_INFORMATION_WRONG.throwUserException();
+            }
+            return currentUser;
+        }  catch (RuntimeException e) {
+            throw new UserException(e.getMessage(), e);
         }
-        return currentUser;
     }
 
     @Override
     public User updateUserInfo(@NotNull User user) throws UserException {
-        Integer id = user.getId();
-        checkUserId(id, this);
-        user.setUpdateTime(null);
-        if (updateById(user)) {
-            return getById(id);
+        try {
+            Integer id = user.getId();
+            checkId(User.class, id, this);
+            user.setUpdateTime(null);
+            if (updateById(user)) {
+                return getById(id);
+            }
+            UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
+            return null;
+        } catch (RuntimeException e) {
+            throw new UserException(e.getMessage(), e);
         }
-        UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
-        return null;
     }
 
     @Override
-    public User changeScore(@NotNull User user, Integer score) throws UserException {
-        Integer id = user.getId();
-        checkUserId(id, this);
-        user.setScore(user.getScore() + score);
-        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
-        wrapper.eq("id", id);
-        if (!update(user, wrapper)) {
-            UserExceptionEnumeration.USER_SCORE_UPDATE_FAILED.throwUserException();
+    public User changeScore(
+            @NotNull User user,
+            Integer score) throws UserException {
+        try {
+            Integer id = user.getId();
+            checkId(User.class, id, this);
+            user.setScore(user.getScore() + score);
+            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+            wrapper.eq("id", id);
+            if (!update(user, wrapper)) {
+                UserExceptionEnumeration.USER_SCORE_UPDATE_FAILED.throwUserException();
+            }
+            return user;
+        } catch (RuntimeException e) {
+            throw new UserException(e.getMessage(), e);
         }
-        return user;
     }
 
     @Override
@@ -125,17 +141,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (checkUserPassword(newPassword)) {
                 if (!oldPassword.equals(newPassword)) {
                     if (newPassword.equals(newCheckPassword)) {
-                        checkUserId(id, this);
-                        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
-                        wrapper
-                                .set("userPassword", encrypt(newPassword))
-                                .setSql("updateTime = now()")
-                                .eq("id", id)
-                                .eq("userPassword", encrypt(oldPassword));
-                        if (!update(wrapper)) {
-                            UserExceptionEnumeration.USER_PASSWORD_CHANGE_FAILED.throwUserException();
+                        try {
+                            checkId(User.class, id, this);
+                            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+                            wrapper
+                                    .set("userPassword", encrypt(newPassword))
+                                    .setSql("updateTime = now()")
+                                    .eq("id", id)
+                                    .eq("userPassword", encrypt(oldPassword));
+                            if (!update(wrapper)) {
+                                UserExceptionEnumeration.USER_PASSWORD_CHANGE_FAILED.throwUserException();
+                            }
+                            return getById(id);
+                        } catch (RuntimeException e) {
+                            throw new UserException(e.getMessage(), e);
                         }
-                        return getById(id);
                     } else {
                         UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwUserException();
                     }

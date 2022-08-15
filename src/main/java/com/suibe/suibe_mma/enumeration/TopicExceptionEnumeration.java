@@ -29,7 +29,15 @@ public enum TopicExceptionEnumeration {
     /**
      * 题目信息有误
      */
-    TOPIC_MESSAGE_WRONG("题目信息有误");
+    TOPIC_MESSAGE_WRONG("题目信息有误"),
+    /**
+     * 题目删除失败
+     */
+    TOPIC_REMOVE_FAILED("题目删除失败"),
+    /**
+     * 题目作者id不匹配
+     */
+    TOPIC_USERID_MATCH_FAILED("题目作者id不匹配");
 
     /**
      * 异常信息

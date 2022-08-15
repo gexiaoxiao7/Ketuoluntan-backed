@@ -2,19 +2,10 @@ package com.suibe.suibe_mma.util;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.suibe.suibe_mma.domain.Reply;
-import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
-import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
-import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
-import com.suibe.suibe_mma.enumeration.UserExceptionEnumeration;
-import com.suibe.suibe_mma.exception.ReplyException;
-import com.suibe.suibe_mma.exception.TopicException;
-import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.UserMapper;
-import com.suibe.suibe_mma.service.ReplyService;
-import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -87,7 +78,9 @@ public class ServiceUtil {
      * @param userMapper 用户mapper类
      * @return 是否存在
      */
-    public static boolean isUserExist(@NotNull User user, @NotNull UserMapper userMapper) {
+    public static boolean isUserExist(
+            @NotNull User user,
+            @NotNull UserMapper userMapper) {
         return userMapper.selectByUserAccount(user.getUserAccount()) > 0;
     }
 
@@ -97,61 +90,28 @@ public class ServiceUtil {
      * @param userMapper 用户mapper类
      * @return 是否存在
      */
-    public static boolean isUserExist(String userAccount, @NotNull UserMapper userMapper) {
+    public static boolean isUserExist(
+            String userAccount,
+            @NotNull UserMapper userMapper) {
         return userMapper.selectByUserAccount(userAccount) > 0;
     }
 
     /**
-     * 检查题目id是否有效或为空
-     * @param id 题目唯一标识
-     * @param topicService 题目服务类
-     * @return 题目信息
-     * @throws TopicException 题目id无效或为空
+     * 检查id是否有效或为空
+     * @param id 唯一标识
+     * @param service 相关服务类
+     * @return 如果有效则返回相关信息
+     * @throws RuntimeException id无效或为空
      */
-    public static Topic checkTopicId(Long id, TopicService topicService) throws TopicException {
-        if (id == null) {
-            TopicExceptionEnumeration.TOPIC_ID_IS_NULL.throwTopicException();
+    public static <T extends Checkable<T, R>, R> T checkId(
+            @NotNull Class<T> clazz,
+            R id,
+            IService<T> service) throws RuntimeException {
+        try {
+            return clazz.newInstance().checkPrimaryKey(id, service);
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
-        Topic topic = topicService.getById(id);
-        if (topic == null) {
-            TopicExceptionEnumeration.TOPIC_ID_IS_WRONG.throwTopicException();
-        }
-        return topic;
-    }
-
-    /**
-     * 检查用户id是否有效或为空
-     * @param id 用户唯一标识
-     * @param userService 用户服务类
-     * @return 如果有效则返回用户信息
-     * @throws UserException 用户id无效或为空
-     */
-    public static User checkUserId(Integer id, UserService userService) throws UserException {
-        if (id == null) {
-            UserExceptionEnumeration.USER_ID_IS_NULL.throwUserException();
-        }
-        User user = userService.getById(id);
-        if (user == null) {
-            UserExceptionEnumeration.USER_ID_WRONG.throwUserException();
-        }
-        return user;
-    }
-
-    /**
-     * 检查回复id是否有效或为空
-     * @param id 回复唯一标识
-     * @return 回复信息
-     * @throws ReplyException 回复id无效或为空
-     */
-    public static Reply checkReplyId(Long id, ReplyService replyService) throws ReplyException {
-        if (id == null) {
-            ReplyExceptionEnumeration.REPLY_ID_IS_NULL.throwReplyException();
-        }
-        Reply reply = replyService.getById(id);
-        if (reply == null) {
-            ReplyExceptionEnumeration.REPLY_ID_IS_WRONG.throwReplyException();
-        }
-        return reply;
     }
 
     /**
@@ -161,7 +121,9 @@ public class ServiceUtil {
      * @return wrapper
      */
     @NotNull
-    public static UpdateWrapper<User> likeHelper(boolean flag, Integer userId) {
+    public static UpdateWrapper<User> likeHelper(
+            boolean flag,
+            Integer userId) {
         UpdateWrapper<User> wrapper = new UpdateWrapper<>();
         wrapper.eq("id", userId);
         if (flag) {
@@ -180,7 +142,10 @@ public class ServiceUtil {
      * @param key 键
      * @return 标志
      */
-    public static Integer likeOrNot(Integer userId, @NotNull RedisTemplate<String, Object> template, String key) {
+    public static Integer likeOrNot(
+            Integer userId,
+            @NotNull RedisTemplate<String, Object> template,
+            String key) {
         Boolean member = template.opsForSet().isMember(key, userId);
         if (member == null || !member) {
             return -1;

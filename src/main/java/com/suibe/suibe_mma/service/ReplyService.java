@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.exception.ReplyException;
 
@@ -12,7 +13,8 @@ import java.util.List;
 /**
  * 回复服务类接口
  */
-public interface ReplyService extends IService<Reply> {
+public interface ReplyService
+        extends IService<Reply> {
     /**
      * 写回复
      * @param replyWriteRequest 写回复信息类
@@ -35,7 +37,9 @@ public interface ReplyService extends IService<Reply> {
      * @return 回复信息
      * @throws ReplyException 回复id无效或为空，用户id无效或为空等
      */
-    Reply like(Long replyId, Integer userId) throws ReplyException;
+    Reply like(
+            Long replyId,
+            Integer userId) throws ReplyException;
 
     /**
      * 根据题目获取回复
@@ -60,5 +64,18 @@ public interface ReplyService extends IService<Reply> {
      * @return 是否点赞
      * @throws ReplyException 用户id为空或无效
      */
-    Integer replyLikeHelp(Reply reply, Integer id) throws ReplyException;
+    Integer replyLikeHelp(
+            Reply reply,
+            Integer id) throws ReplyException;
+
+    /**
+     * 作者自动删除回复
+     * @param replyIdRequest 回复id类
+     * @param userId 用户唯一标识
+     * @return  回复id
+     * @throws ReplyException 作者id无效或为空，删除回复失败，id不匹配
+     */
+    Long deleteByAuthor(
+            ReplyIdRequest replyIdRequest,
+            Integer userId) throws ReplyException;
 }

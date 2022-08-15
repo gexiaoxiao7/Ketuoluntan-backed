@@ -3,6 +3,7 @@ package com.suibe.suibe_mma.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.request.TopicIdRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.exception.TopicException;
 
@@ -11,7 +12,8 @@ import java.util.List;
 /**
  * 题目服务类接口
  */
-public interface TopicService extends IService<Topic> {
+public interface TopicService
+        extends IService<Topic> {
 
     /**
      * 上传题目
@@ -28,7 +30,9 @@ public interface TopicService extends IService<Topic> {
      * @return 题目信息
      * @throws TopicException id为空或无效、点赞更新失败、topicId为空或无效
      */
-    Topic like(Long topicId, Integer id) throws TopicException;
+    Topic like(
+            Long topicId,
+            Integer id) throws TopicException;
 
     /**
      * 根据用户唯一标识获取所有题目
@@ -53,5 +57,18 @@ public interface TopicService extends IService<Topic> {
      * @return 是否点赞
      * @throws TopicException 用户id无效或为空
      */
-    Integer topicLikeHelp(Topic topic, Integer id) throws TopicException;
+    Integer topicLikeHelp(
+            Topic topic,
+            Integer id) throws TopicException;
+
+    /**
+     * 题目作者删除题目
+     * @param topicIdRequest 题目id类
+     * @param userId 用户唯一标识
+     * @return 题目id
+     * @throws TopicException 作者id无效或为空，删除题目失败，id不匹配
+     */
+    Long deleteByAuthor(
+            TopicIdRequest topicIdRequest,
+            Integer userId) throws TopicException;
 }

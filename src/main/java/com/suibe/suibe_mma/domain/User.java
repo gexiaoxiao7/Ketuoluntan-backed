@@ -1,6 +1,10 @@
 package com.suibe.suibe_mma.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.suibe.suibe_mma.domain.able.Checkable;
+import com.suibe.suibe_mma.enumeration.UserExceptionEnumeration;
+import com.suibe.suibe_mma.exception.UserException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -13,12 +17,16 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(exclude = {"score"})
 @TableName("mma_user")
-public class User implements Serializable {
+public class User
+        implements Serializable, Checkable<User, Integer> {
 
     /**
      * 用户唯一标识
      */
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(
+            value = "id",
+            type = IdType.AUTO
+    )
     private Integer id;
 
     /**
@@ -35,7 +43,10 @@ public class User implements Serializable {
     /**
      * 用户密码
      */
-    @TableField(value = "userPassword", select = false)
+    @TableField(
+            value = "userPassword",
+            select = false
+    )
     private String userPassword;
 
     /**
@@ -66,6 +77,12 @@ public class User implements Serializable {
     private Integer score;
 
     /**
+     * 自我介绍
+     */
+    @TableField("selfIntroduction")
+    private String selfIntroduction;
+
+    /**
      * 用户是否删除标志
      */
     @TableLogic
@@ -75,13 +92,19 @@ public class User implements Serializable {
     /**
      * 创建时间
      */
-    @TableField(value = "createTime", fill = FieldFill.INSERT)
+    @TableField(
+            value = "createTime",
+            fill = FieldFill.INSERT
+    )
     private Date createTime;
 
     /**
      * 更新时间
      */
-    @TableField(value = "updateTime", fill = FieldFill.INSERT_UPDATE)
+    @TableField(
+            value = "updateTime",
+            fill = FieldFill.INSERT_UPDATE
+    )
     private Date updateTime;
 
     /**
@@ -89,4 +112,18 @@ public class User implements Serializable {
      */
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @Override
+    public User checkPrimaryKey(
+            Integer id,
+            IService<User> service) throws UserException {
+        if (id == null) {
+            UserExceptionEnumeration.USER_ID_IS_NULL.throwUserException();
+        }
+        User user = service.getById(id);
+        if (user == null) {
+            UserExceptionEnumeration.USER_ID_WRONG.throwUserException();
+        }
+        return user;
+    }
 }
