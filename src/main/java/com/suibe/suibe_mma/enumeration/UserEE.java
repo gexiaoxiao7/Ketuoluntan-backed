@@ -81,7 +81,15 @@ public enum UserEE {
     /**
      * 用户解封失败
      */
-    USER_UNSEAL_FAILED("用户解封失败");
+    USER_UNSEAL_FAILED("用户解封失败"),
+    /**
+     * 管理员权限修改失败
+     */
+    USER_MANAGER_ROLE_CHANGE_FAILED("管理员权限修改失败"),
+    /**
+     * 该用户不是普通用户
+     */
+    USER_NOT_NORMAL("该用户不是普通用户");
 
     /**
      * 异常信息

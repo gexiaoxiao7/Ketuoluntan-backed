@@ -200,7 +200,7 @@ public class ServiceUtil {
             TopicService topicService,
             boolean isAuthor) throws RuntimeException {
         checkReplyUserId(reply, user.getId(), isAuthor);
-        checkUserRole(user, !isAuthor);
+        checkUserRole(user, !isAuthor, false);
         reply.setUpdateTime(null);
         if (!replyService.removeById(reply)) {
             ReplyEE.REPLY_REMOVE_FAILED.throwE();
@@ -230,7 +230,7 @@ public class ServiceUtil {
             @NotNull ReplyService replyService,
             TopicService topicService,
             boolean isAuthor) throws RuntimeException {
-        checkUserRole(user, !isAuthor);
+        checkUserRole(user, !isAuthor, false);
         List<Reply> replies = replyService.listByIds(ids);
         List<Long> topicIds = new ArrayList<>(replies.size());
         Map<String, Long> map = new HashMap<>();
@@ -276,7 +276,7 @@ public class ServiceUtil {
             @NotNull TopicService topicService,
             boolean isAuthor) throws RuntimeException {
         checkTopicUserId(topic, user.getId(), isAuthor);
-        checkUserRole(user, !isAuthor);
+        checkUserRole(user, !isAuthor, false);
         topic.setUpdateTime(null);
         if (!topicService.removeById(topic)) {
             TopicEE.TOPIC_REMOVE_FAILED.throwE();
@@ -298,7 +298,7 @@ public class ServiceUtil {
             User user,
             @NotNull TopicService topicService,
             boolean isAuthor) throws RuntimeException {
-        checkUserRole(user, !isAuthor);
+        checkUserRole(user, !isAuthor, false);
         List<Topic> topics = topicService.listByIds(ids);
         Integer userId = user.getId();
         topics.forEach(topic -> {

@@ -112,15 +112,16 @@ public class UserServiceImpl
             Integer score) throws UserException {
         try {
             Integer id = user.getId();
-            checkId(User.class, id, this);
-            user.setScore(user.getScore() + score);
-            user.setUpdateTime(null);
+            User getUser = checkId(User.class, id, this);
+            checkUserInformation(getUser, user);
+            getUser.setScore(getUser.getScore() + score);
+            getUser.setUpdateTime(null);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper.eq("id", id);
-            if (!update(user, wrapper)) {
+            if (!update(getUser, wrapper)) {
                 UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }
-            return user;
+            return getUser;
         } catch (RuntimeException e) {
             throw new UserException(e.getMessage(), e);
         }
@@ -164,11 +165,35 @@ public class UserServiceImpl
     }
 
     @Override
-    public void sealUser(UserIdRequest userIdRequest, User currentUser) throws UserException {
+    public void managerChangeScore(
+            User user,
+            Integer score) throws UserException {
+        try {
+            Integer id = user.getId();
+            int score_plus = score + user.getScore();
+            if (score_plus < 0) {
+                score_plus = 0;
+            }
+            user.setScore(score_plus);
+            user.setUpdateTime(null);
+            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+            wrapper.eq("id", id);
+            if (!update(user, wrapper)) {
+                UserEE.USER_SCORE_UPDATE_FAILED.throwE();
+            }
+        } catch (RuntimeException e) {
+            throw new UserException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void sealUser(
+            UserIdRequest userIdRequest,
+            User currentUser) throws UserException {
         try {
             User user = checkId(User.class, userIdRequest.getUserId(), this);
             checkUserInformation(checkId(User.class, currentUser.getId(), this), currentUser);
-            checkUserRole(currentUser, true);
+            checkUserRole(currentUser, true, false);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .eq("id", user.getId())
@@ -183,11 +208,13 @@ public class UserServiceImpl
     }
 
     @Override
-    public void unsealUser(UserIdRequest userIdRequest, User currentUser) throws UserException {
+    public void unsealUser(
+            UserIdRequest userIdRequest,
+            User currentUser) throws UserException {
         try {
             User user = checkId(User.class, userIdRequest.getUserId(), this);
             checkUserInformation(checkId(User.class, currentUser.getId(), this), currentUser);
-            checkUserRole(currentUser, true);
+            checkUserRole(currentUser, true, false);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .eq("id", user.getId())
@@ -198,6 +225,15 @@ public class UserServiceImpl
             }
         } catch (RuntimeException e) {
             throw new UserException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void giveManager(@NotNull User user) throws UserException {
+        user.setUpdateTime(null);
+        user.setUserRole(1);
+        if (!updateById(user)) {
+            UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
         }
     }
 

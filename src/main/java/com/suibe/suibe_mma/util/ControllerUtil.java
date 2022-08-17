@@ -5,7 +5,6 @@ import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.UserIdRequest;
 import com.suibe.suibe_mma.enumeration.TopicEE;
-import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.UserService;
@@ -40,7 +39,7 @@ public class ControllerUtil {
             throw new RuntimeException("当前用户未登录");
         }
         User user = (User) o;
-        checkUserRole(user, false);
+        checkUserRole(user, false, false);
         return user;
     }
 

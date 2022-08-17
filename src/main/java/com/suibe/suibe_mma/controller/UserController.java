@@ -1,10 +1,7 @@
 package com.suibe.suibe_mma.controller;
 
 import com.suibe.suibe_mma.domain.User;
-import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
-import com.suibe.suibe_mma.domain.request.UserIdRequest;
-import com.suibe.suibe_mma.domain.request.UserLoginRequest;
-import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
+import com.suibe.suibe_mma.domain.request.*;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
@@ -63,7 +60,7 @@ public class UserController {
         try {
             requestFail(userLoginRequest);
             User user = userService.login(userLoginRequest);
-            checkUserRole(user, false);
+            checkUserRole(user, false, false);
             session.setAttribute(userService.USER_LOGIN_STATE, user);
             session.setAttribute("errMsg", null);
             return user;
@@ -225,6 +222,54 @@ public class UserController {
             sealUserOrNot(userIdRequest, session, userService, false);
             session.setAttribute("errMsg", null);
             return userIdRequest.getUserId();
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 管理员给用户修改积分
+     * @param changeScoreRequest 修改积分请求类
+     * @param request 请求域对象
+     * @return 用户id
+     */
+    @PostMapping("/scoreChange")
+    public Integer scoreChange(
+            @RequestBody ChangeScoreRequest changeScoreRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(changeScoreRequest);
+            User current = getCurrent(session);
+            checkUserRole(current, true, false);
+            Integer id = changeScoreRequest.getId();
+            if (current.getId().equals(id)) {
+                throw new RuntimeException("不能为自己改变分数");
+            }
+            userService.managerChangeScore(checkId(User.class, id, userService), changeScoreRequest.getScore());
+            session.setAttribute("errMsg", null);
+            return id;
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    @PostMapping("/giveManager")
+    public Integer giveManager(
+            UserIdRequest userIdRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(userIdRequest);
+            User current = getCurrent(session);
+            checkUserRole(current, true, false);
+            User user = checkId(User.class, userIdRequest.getUserId(), userService);
+            checkUserRole(user, false, true);
+            userService.giveManager(user);
+            session.setAttribute("errMsg", null);
+            return null;
         } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;

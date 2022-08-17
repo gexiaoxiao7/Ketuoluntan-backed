@@ -72,7 +72,19 @@ public interface UserService
      * @return 用户信息
      * @throws UserException 新旧密码格式错误或一致，新密码与校验码不一致，用户id无效或为空，更新密码失败
      */
-    User changePassword(UserChangePasswordRequest request, User currentUser) throws UserException;
+    User changePassword(
+            UserChangePasswordRequest request,
+            User currentUser) throws UserException;
+
+    /**
+     * 修改积分
+     * @param user 用户信息
+     * @param score 改变积分
+     * @throws UserException 改变积分失败
+     */
+    void managerChangeScore(
+            User user,
+            Integer score) throws UserException;
 
     /**
      * 封号用户
@@ -80,7 +92,9 @@ public interface UserService
      * @param currentUser 当前登录用户
      * @throws UserException 该用户已被封，id无效或为空，封号失败
      */
-    void sealUser(UserIdRequest userIdRequest, User currentUser) throws UserException;
+    void sealUser(
+            UserIdRequest userIdRequest,
+            User currentUser) throws UserException;
 
     /**
      * 解封用户
@@ -88,5 +102,14 @@ public interface UserService
      * @param currentUser 当前登录用户
      * @throws UserException 该用户未被封，id无效或为空，解封失败
      */
-    void unsealUser(UserIdRequest userIdRequest, User currentUser) throws UserException;
+    void unsealUser(
+            UserIdRequest userIdRequest,
+            User currentUser) throws UserException;
+
+    /**
+     * 给普通用户修改权限
+     * @param user 用户信息
+     * @throws UserException 修改失败
+     */
+    void giveManager(User user) throws UserException;
 }

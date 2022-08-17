@@ -22,15 +22,17 @@ public class DomainUtil {
     private DomainUtil() {}
 
     /**
-     * 检查用户是否被封或是否为管理员
+     * 检查用户是否被封、是否为管理员、是否是普通用户
      * @param user 用户信息
      * @param isManager 是否是管理员
-     * @throws RuntimeException 被封、不是管理员
+     * @param isCommon 是否是普通用户
+     * @throws UserException 被封、不是管理员、不是普通用户
      */
     public static void checkUserRole(
             User user,
-            boolean isManager) throws RuntimeException {
-        UserRole.checkUserRole(user, isManager);
+            boolean isManager,
+            boolean isCommon) throws UserException {
+        UserRole.checkUserRole(user, isManager, isCommon);
     }
 
     /**
@@ -117,12 +119,16 @@ public class DomainUtil {
          */
         private static void checkUserRole(
                 @NotNull User user,
-                boolean isManager) throws RuntimeException{
+                boolean isManager,
+                boolean isCommon) throws UserException{
             if (user.getUserRole().equals(SEALED_USER.roleNum)) {
-                throw new RuntimeException("该用户已被封");
+                UserEE.USER_SEALED.throwE();
             }
             if (isManager && !user.getUserRole().equals(MANAGER_USER.roleNum)) {
-                throw new RuntimeException("该用户不是管理员");
+                UserEE.USER_NOT_MANAGER.throwE();
+            }
+            if (isCommon && !user.getUserRole().equals(COMMON_USER.roleNum)) {
+                UserEE.USER_NOT_NORMAL.throwE();
             }
         }
     }
