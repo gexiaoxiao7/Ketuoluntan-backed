@@ -2,19 +2,30 @@ package com.suibe.suibe_mma.util;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.suibe.suibe_mma.domain.Reply;
+import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
+import com.suibe.suibe_mma.enumeration.ReplyEE;
+import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.mapper.UserMapper;
+import com.suibe.suibe_mma.service.ReplyService;
+import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import static com.suibe.suibe_mma.service.UserService.SALT;
+import static com.suibe.suibe_mma.util.DomainUtil.*;
 
 /**
  * Service层工具类
@@ -46,12 +57,12 @@ public class ServiceUtil {
      */
     public static boolean checkUserAccount(String userAccount) {
         if (userAccount == null || "".equals(userAccount)) {
-            return false;
+            return true;
         }
         if (userAccount.length() != 8) {
-            return false;
+            return true;
         }
-        return !Pattern.compile(".*[^0-9].*").matcher(userAccount).find();
+        return Pattern.compile(".*[^0-9].*").matcher(userAccount).find();
     }
 
     /**
@@ -64,12 +75,12 @@ public class ServiceUtil {
      */
     public static boolean checkUserPassword(String userPassword) {
         if (userPassword == null || "".equals(userPassword)) {
-            return false;
+            return true;
         }
         if (userPassword.length() < 8) {
-            return false;
+            return true;
         }
-        return userPassword.matches("[a-zA-Z].*");
+        return !userPassword.matches("[a-zA-Z].*");
     }
 
     /**
@@ -171,6 +182,133 @@ public class ServiceUtil {
             IService<T> service,
             UserService userService) throws RuntimeException {
         return t.like(userId, likeOrNot(userId, template, key), template, key, service, userService);
+    }
+
+    /**
+     * 删除回复帮助方法
+     * @param reply 回复信息
+     * @param user 用户信息
+     * @param replyService 回复服务类
+     * @param topicService 题目服务类
+     * @param isAuthor 是否是作者自己删
+     * @throws RuntimeException 删除回复失败，相关题目replyNum更新失败，用户id不匹配，不为管理员
+     */
+    public static void replyDelete(
+            Reply reply,
+            @NotNull User user,
+            @NotNull ReplyService replyService,
+            TopicService topicService,
+            boolean isAuthor) throws RuntimeException {
+        checkReplyUserId(reply, user.getId(), isAuthor);
+        checkUserRole(user, !isAuthor);
+        reply.setUpdateTime(null);
+        if (!replyService.removeById(reply)) {
+            ReplyEE.REPLY_REMOVE_FAILED.throwE();
+        }
+        UpdateWrapper<Topic> wrapper = new UpdateWrapper<>();
+        wrapper
+                .eq("topicId", reply.getTopicId())
+                .setSql("updateTime = now()")
+                .setSql("replyNum = replyNum - 1");
+        if (!topicService.update(wrapper)) {
+            ReplyEE.REPLY_TOPIC_REPLYNUM_SUB_FAILED.throwE();
+        }
+    }
+
+    /**
+     * 批量删除回复帮助方法
+     * @param ids 回复id列表
+     * @param user 用户信息
+     * @param replyService 回复服务类
+     * @param topicService 题目服务类
+     * @param isAuthor 是否是作者自己删
+     * @throws RuntimeException 删除回复失败，相关题目replyNum更新失败，用户id不匹配，不为管理员
+     */
+    public static void replyDeleteBatch(
+            List<Long> ids,
+            User user,
+            @NotNull ReplyService replyService,
+            TopicService topicService,
+            boolean isAuthor) throws RuntimeException {
+        checkUserRole(user, !isAuthor);
+        List<Reply> replies = replyService.listByIds(ids);
+        List<Long> topicIds = new ArrayList<>(replies.size());
+        Map<String, Long> map = new HashMap<>();
+        Integer userId = user.getId();
+        replies.forEach(reply -> {
+            checkReplyUserId(reply, userId, isAuthor);
+            reply.setUpdateTime(null);
+            topicIds.add(reply.getReplyId());
+        });
+        if (!replyService.removeBatchByIds(replies)) {
+            ReplyEE.REPLY_REMOVE_FAILED.throwE();
+        }
+        topicIds.forEach(topicId -> {
+            if (map.containsKey("topicId:" + topicId)) {
+                map.put("topicId:" + topicId, map.get("topicId:" + topicId) + 1L);
+            } else {
+                map.put("topicId:" + topicId, 1L);
+            }
+        });
+        map.forEach((key, value) -> {
+            UpdateWrapper<Topic> wrapper = new UpdateWrapper<>();
+            wrapper
+                    .eq("topicId", Long.parseLong(key.split(":")[1]))
+                    .setSql("updateTime = now()")
+                    .setSql("replyNum = replyNum - " + value);
+            if (!topicService.update(wrapper)) {
+                ReplyEE.REPLY_TOPIC_REPLYNUM_SUB_FAILED.throwE();
+            }
+        });
+    }
+
+    /**
+     * 题目删除帮助方法
+     * @param topic 题目信息
+     * @param user 用户信息
+     * @param topicService 题目服务类
+     * @param isAuthor 是否是作者
+     * @throws RuntimeException 题目删除失败，用户id不匹配，不为管理员
+     */
+    public static void topicDelete(
+            Topic topic,
+            @NotNull User user,
+            @NotNull TopicService topicService,
+            boolean isAuthor) throws RuntimeException {
+        checkTopicUserId(topic, user.getId(), isAuthor);
+        checkUserRole(user, !isAuthor);
+        topic.setUpdateTime(null);
+        if (!topicService.removeById(topic)) {
+            TopicEE.TOPIC_REMOVE_FAILED.throwE();
+        }
+    }
+
+    /**
+     * 题目批量删除帮助方法
+     * @param ids 题目id列表
+     * @param user 用户信息
+     * @param topicService 题目服务类
+     * @param isAuthor 是否是作者
+     * @return 题目信息列表
+     * @throws RuntimeException 题目删除失败，用户id不匹配，不为管理员
+     */
+    @NotNull
+    public static List<Topic> topicDeleteBatch(
+            List<Long> ids,
+            User user,
+            @NotNull TopicService topicService,
+            boolean isAuthor) throws RuntimeException {
+        checkUserRole(user, !isAuthor);
+        List<Topic> topics = topicService.listByIds(ids);
+        Integer userId = user.getId();
+        topics.forEach(topic -> {
+            checkTopicUserId(topic, userId, isAuthor);
+            topic.setUpdateTime(null);
+        });
+        if (!topicService.removeBatchByIds(topics)) {
+            TopicEE.TOPIC_REMOVE_FAILED.throwE();
+        }
+        return topics;
     }
 
 }

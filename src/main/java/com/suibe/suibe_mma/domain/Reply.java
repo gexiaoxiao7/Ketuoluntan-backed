@@ -4,10 +4,11 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
-import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
+import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.service.UserService;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
@@ -21,6 +22,7 @@ import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
  * 回复类
  */
 @Data
+@EqualsAndHashCode(exclude = {"replyLikes", "updateTime"})
 @TableName("mma_reply")
 public class Reply
         implements Serializable, Likable<Reply>, Checkable<Reply, Long> {
@@ -115,7 +117,7 @@ public class Reply
         }
         updateTime = null;
         if (!service.updateById(this)) {
-            ReplyExceptionEnumeration.REPLY_LIKE_UPDATE_FAILED.throwReplyException();
+            ReplyEE.REPLY_LIKE_UPDATE_FAILED.throwE();
         }
         userService.update(likeHelper(rflag, this.userId));
         return service.getById(replyId);
@@ -126,11 +128,11 @@ public class Reply
             Long id,
             IService<Reply> service) throws ReplyException {
         if (id == null) {
-            ReplyExceptionEnumeration.REPLY_ID_IS_NULL.throwReplyException();
+            ReplyEE.REPLY_ID_IS_NULL.throwE();
         }
         Reply reply = service.getById(id);
         if (reply == null) {
-            ReplyExceptionEnumeration.REPLY_ID_IS_WRONG.throwReplyException();
+            ReplyEE.REPLY_ID_IS_WRONG.throwE();
         }
         return reply;
     }

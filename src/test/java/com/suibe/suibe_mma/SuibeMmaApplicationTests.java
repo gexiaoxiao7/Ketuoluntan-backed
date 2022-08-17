@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -89,9 +90,8 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test6() {
-        List<Reply> topicReply = replyService.getTopicReply(topicService.getById(1));
-        topicReply.forEach(reply -> reply.setUpdateTime(null));
-        replyService.removeBatchByIds(topicReply);
+        String[] split = ("topicId:" + 1).split(":");
+        System.out.println(Arrays.toString(split));
     }
 
 }

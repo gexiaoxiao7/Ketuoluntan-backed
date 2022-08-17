@@ -18,9 +18,12 @@ public interface ReplyService
     /**
      * 写回复
      * @param replyWriteRequest 写回复信息类
+     * @param currentUser 当前登录用户信息
      * @throws ReplyException 回复内容为空或添加失败
      */
-    void writeReply(ReplyWriteRequest replyWriteRequest) throws ReplyException;
+    void writeReply(
+            ReplyWriteRequest replyWriteRequest,
+            User currentUser) throws ReplyException;
 
     /**
      * 根据用户id获取自己写的所有回复
@@ -62,20 +65,35 @@ public interface ReplyService
      * @param reply 回复信息
      * @param id 用户唯一标识
      * @return 是否点赞
-     * @throws ReplyException 用户id为空或无效
+     * @throws ReplyException 用户id为空或无效，该用户已被封号
      */
     Integer replyLikeHelp(
             Reply reply,
             Integer id) throws ReplyException;
 
     /**
-     * 作者自动删除回复
+     * 作者或管理员删除回复
      * @param replyIdRequest 回复id类
-     * @param userId 用户唯一标识
+     * @param user 用户信息
+     * @param isAuthor 是否是作者自己
      * @return  回复id
-     * @throws ReplyException 作者id无效或为空，删除回复失败，id不匹配
+     * @throws ReplyException 用户id无效或为空，该用户已被封号，删除回复失败，id不匹配，相关题目replyNum更新失败，不为管理员
      */
-    Long deleteByAuthor(
+    Long deleteByAuthorOrNot(
             ReplyIdRequest replyIdRequest,
-            Integer userId) throws ReplyException;
+            User user,
+            boolean isAuthor) throws ReplyException;
+
+    /**
+     * 作者或管理员批量删除回复
+     * @param ids 回复id列表
+     * @param user 用户信息
+     * @param isAuthor 是否是作者自己
+     * @return 用户id列表
+     * @throws ReplyException 用户id无效或为空，该用户已被封号，删除回复失败，id不匹配，相关题目replyNum更新失败，不为管理员
+     */
+    List<Long> deleteBatchByAuthorOrNot(
+            List<Long> ids,
+            User user,
+            boolean isAuthor) throws ReplyException;
 }

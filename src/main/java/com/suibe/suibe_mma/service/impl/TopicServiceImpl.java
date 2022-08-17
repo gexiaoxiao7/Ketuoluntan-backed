@@ -2,16 +2,15 @@ package com.suibe.suibe_mma.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.TopicIdRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
-import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
+import com.suibe.suibe_mma.enumeration.TopicEE;
+import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.TopicMapper;
-import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import com.suibe.suibe_mma.util.ServiceUtil;
@@ -39,12 +38,6 @@ public class TopicServiceImpl
         implements TopicService {
 
     /**
-     * 注入TopicMapper
-     */
-    @Resource
-    private TopicMapper topicMapper;
-
-    /**
      * 注入UserService
      */
     @Resource
@@ -62,16 +55,15 @@ public class TopicServiceImpl
             String topicTitle = topicUploadRequest.getTopicTitle();
             Integer userId = topicUploadRequest.getUserId();
             if (topicTitle == null || "".equals(topicTitle)) {
-                TopicExceptionEnumeration.TOPIC_TITLE_IS_SPACE.throwTopicException();
+                TopicEE.TOPIC_TITLE_IS_SPACE.throwE();
             }
             User user = checkId(User.class, userId, userService);
             Topic topic = new Topic();
             topic.setUserId(userId);
             topic.setTopicTitle(topicTitle);
             topic.setTopicContent(topicUploadRequest.getTopicContent());
-            int count = topicMapper.insert(topic);
-            if (count == 0) {
-                TopicExceptionEnumeration.TOPIC_INSERT_FAILED.throwTopicException();
+            if (!save(topic)) {
+                TopicEE.TOPIC_INSERT_FAILED.throwE();
             }
             return userService.changeScore(user, 10);
         } catch (RuntimeException e) {
@@ -110,11 +102,10 @@ public class TopicServiceImpl
         try {
             Long topicId = topic.getTopicId();
             Topic topic1 = checkId(Topic.class, topicId, this);
-            if (topic.equals(topic1)) {
-                return checkId(User.class, topic.getUserId(), userService);
+            if (!topic.equals(topic1)) {
+                TopicEE.TOPIC_MESSAGE_WRONG.throwE();
             }
-            TopicExceptionEnumeration.TOPIC_MESSAGE_WRONG.throwTopicException();
-            return null;
+            return checkId(User.class, topic.getUserId(), userService);
         } catch (RuntimeException e) {
             throw new TopicException(e.getMessage(), e);
         }
@@ -133,21 +124,35 @@ public class TopicServiceImpl
     }
 
     @Override
-    public Topic deleteByAuthor(
+    public Topic deleteByAuthorOrNot(
             @NotNull TopicIdRequest topicIdRequest,
-            Integer userId) throws TopicException {
+            User user,
+            boolean isAuthor) throws TopicException {
         try {
             Long topicId = topicIdRequest.getTopicId();
-            checkId(User.class, userId, userService);
-            Topic topic = checkId(Topic.class, topicId, this);
-            if (topic.getUserId().equals(userId)) {
-                if (!removeById(topic)) {
-                    TopicExceptionEnumeration.TOPIC_REMOVE_FAILED.throwTopicException();
-                }
-            } else {
-                TopicExceptionEnumeration.TOPIC_USERID_MATCH_FAILED.throwTopicException();
+            User getUser = checkId(User.class, user.getId(), userService);
+            if (!getUser.equals(user)) {
+                UserEE.USER_INFORMATION_WRONG.throwE();
             }
+            Topic topic = checkId(Topic.class, topicId, this);
+            topicDelete(topic, getUser, this, isAuthor);
             return topic;
+        } catch (RuntimeException e) {
+            throw new TopicException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<Topic> deleteBatchByAuthorOrNot(
+            List<Long> ids,
+            User user,
+            boolean isAuthor) throws TopicException {
+        try {
+            User getUser = checkId(User.class, user.getId(), userService);
+            if (!getUser.equals(user)) {
+                UserEE.USER_INFORMATION_WRONG.throwE();
+            }
+            return topicDeleteBatch(ids, getUser, this, isAuthor);
         } catch (RuntimeException e) {
             throw new TopicException(e.getMessage(), e);
         }

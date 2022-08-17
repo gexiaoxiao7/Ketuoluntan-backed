@@ -7,7 +7,7 @@ import com.suibe.suibe_mma.domain.request.UserChangePasswordRequest;
 import com.suibe.suibe_mma.domain.request.UserIdRequest;
 import com.suibe.suibe_mma.domain.request.UserLoginRequest;
 import com.suibe.suibe_mma.domain.request.UserRegisterRequest;
-import com.suibe.suibe_mma.enumeration.UserExceptionEnumeration;
+import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
+import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
+import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.*;
 
 /**
@@ -39,23 +41,20 @@ public class UserServiceImpl
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        if (checkUserAccount(userAccount) && checkUserPassword(userPassword)) {
-            if (userPassword.equals(checkPassword)) {
-                User user = new User();
-                user.setUserAccount(userAccount);
-                if (!isUserExist(user, userMapper)) {
-                    user.setUserPassword(encrypt(userPassword));
-                    if (!save(user)) {
-                        UserExceptionEnumeration.USER_INSERT_FAILED.throwUserException();
-                    }
-                } else {
-                    UserExceptionEnumeration.USER_ACCOUNT_EXISTS.throwUserException();
-                }
-            } else {
-                UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwUserException();
-            }
-        } else {
-            UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG.throwUserException();
+        if (checkUserAccount(userAccount) || checkUserPassword(userPassword)) {
+            UserEE.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG.throwE();
+        }
+        if (!userPassword.equals(checkPassword)) {
+            UserEE.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwE();
+        }
+        User user = new User();
+        user.setUserAccount(userAccount);
+        if (isUserExist(user, userMapper)) {
+            UserEE.USER_ACCOUNT_EXISTS.throwE();
+        }
+        user.setUserPassword(encrypt(userPassword));
+        if (!save(user)) {
+            UserEE.USER_INSERT_FAILED.throwE();
         }
     }
 
@@ -63,24 +62,21 @@ public class UserServiceImpl
     public User login(@NotNull UserLoginRequest userLoginRequest) throws UserException {
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
-        if (checkUserAccount(userAccount) && checkUserPassword(userPassword)) {
-            if (isUserExist(userAccount, userMapper)) {
-                QueryWrapper<User> wrapper = new QueryWrapper<>();
-                wrapper
-                        .eq("userAccount", userAccount)
-                        .eq("userPassword", encrypt(userPassword));
-                User user = getOne(wrapper);
-                if (user == null) {
-                    UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_WRONG.throwUserException();
-                }
-                return user;
-            } else {
-                UserExceptionEnumeration.USER_ACCOUNT_NOT_EXISTS.throwUserException();
-            }
-        } else {
-            UserExceptionEnumeration.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG.throwUserException();
+        if (checkUserAccount(userAccount) || checkUserPassword(userPassword)) {
+            UserEE.USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG.throwE();
         }
-        return null;
+        if (!isUserExist(userAccount, userMapper)) {
+            UserEE.USER_ACCOUNT_NOT_EXISTS.throwE();
+        }
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper
+                .eq("userAccount", userAccount)
+                .eq("userPassword", encrypt(userPassword));
+        User user = getOne(wrapper);
+        if (user == null) {
+            UserEE.USER_ACCOUNT_OR_PASSWORD_WRONG.throwE();
+        }
+        return user;
     }
 
     @Override
@@ -88,12 +84,7 @@ public class UserServiceImpl
         try {
             Integer userId = currentUser.getId();
             User getUser = checkId(User.class, userId, this);
-            if (!getUser.equals(currentUser)) {
-                if (getUser.getUserRole() == 2) {
-                    UserExceptionEnumeration.USER_SEALED.throwUserException();
-                }
-                UserExceptionEnumeration.USER_INFORMATION_WRONG.throwUserException();
-            }
+            checkUserInformation(getUser, currentUser);
             return currentUser;
         }  catch (RuntimeException e) {
             throw new UserException(e.getMessage(), e);
@@ -106,11 +97,10 @@ public class UserServiceImpl
             Integer id = user.getId();
             checkId(User.class, id, this);
             user.setUpdateTime(null);
-            if (updateById(user)) {
-                return getById(id);
+            if (!updateById(user)) {
+                UserEE.USER_INFO_UPDATE_FAILED.throwE();
             }
-            UserExceptionEnumeration.USER_INFO_UPDATE_FAILED.throwUserException();
-            return null;
+            return getById(id);
         } catch (RuntimeException e) {
             throw new UserException(e.getMessage(), e);
         }
@@ -124,10 +114,11 @@ public class UserServiceImpl
             Integer id = user.getId();
             checkId(User.class, id, this);
             user.setScore(user.getScore() + score);
+            user.setUpdateTime(null);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper.eq("id", id);
             if (!update(user, wrapper)) {
-                UserExceptionEnumeration.USER_SCORE_UPDATE_FAILED.throwUserException();
+                UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }
             return user;
         } catch (RuntimeException e) {
@@ -136,59 +127,74 @@ public class UserServiceImpl
     }
 
     @Override
-    public User changePassword(@NotNull UserChangePasswordRequest request) throws UserException {
-        Integer id = request.getId();
-        String oldPassword = request.getOldPassword();
-        String newPassword = request.getNewPassword();
-        String newCheckPassword = request.getNewCheckPassword();
-        if (checkUserPassword(oldPassword)) {
-            if (checkUserPassword(newPassword)) {
-                if (!oldPassword.equals(newPassword)) {
-                    if (newPassword.equals(newCheckPassword)) {
-                        try {
-                            checkId(User.class, id, this);
-                            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
-                            wrapper
-                                    .set("userPassword", encrypt(newPassword))
-                                    .setSql("updateTime = now()")
-                                    .eq("id", id)
-                                    .eq("userPassword", encrypt(oldPassword));
-                            if (!update(wrapper)) {
-                                UserExceptionEnumeration.USER_PASSWORD_CHANGE_FAILED.throwUserException();
-                            }
-                            return getById(id);
-                        } catch (RuntimeException e) {
-                            throw new UserException(e.getMessage(), e);
-                        }
-                    } else {
-                        UserExceptionEnumeration.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwUserException();
-                    }
-                } else {
-                    UserExceptionEnumeration.USER_NEW_AND_OLD_PASSWORD_SAME.throwUserException();
-                }
-            } else {
-                UserExceptionEnumeration.USER_NEW_PASSWORD_FORMAT_WRONG.throwUserException();
+    public User changePassword(
+            @NotNull UserChangePasswordRequest request,
+            User currentUser) throws UserException {
+        try {
+            Integer id = request.getId();
+            String oldPassword = request.getOldPassword();
+            String newPassword = request.getNewPassword();
+            String newCheckPassword = request.getNewCheckPassword();
+            if (checkUserPassword(oldPassword)) {
+                UserEE.USER_OLD_PASSWORD_FORMAT_WRONG.throwE();
             }
-        } else {
-            UserExceptionEnumeration.USER_OLD_PASSWORD_FORMAT_WRONG.throwUserException();
+            if (checkUserPassword(newPassword)) {
+                UserEE.USER_NEW_PASSWORD_FORMAT_WRONG.throwE();
+            }
+            if (oldPassword.equals(newPassword)) {
+                UserEE.USER_NEW_AND_OLD_PASSWORD_SAME.throwE();
+            }
+            if (!newPassword.equals(newCheckPassword)) {
+                UserEE.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwE();
+            }
+            checkUserInformation(checkId(User.class, id, this), currentUser);
+            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+            wrapper
+                    .set("userPassword", encrypt(newPassword))
+                    .setSql("updateTime = now()")
+                    .eq("id", id)
+                    .eq("userPassword", encrypt(oldPassword));
+            if (!update(wrapper)) {
+                UserEE.USER_PASSWORD_CHANGE_FAILED.throwE();
+            }
+            return getById(id);
+        } catch (RuntimeException e) {
+            throw new UserException(e.getMessage(), e);
         }
-        return null;
     }
 
     @Override
-    public void sealUser(UserIdRequest userIdRequest) throws UserException {
+    public void sealUser(UserIdRequest userIdRequest, User currentUser) throws UserException {
         try {
             User user = checkId(User.class, userIdRequest.getUserId(), this);
-            if (user.getUserRole() == 2) {
-                UserExceptionEnumeration.USER_SEALED.throwUserException();
-            }
+            checkUserInformation(checkId(User.class, currentUser.getId(), this), currentUser);
+            checkUserRole(currentUser, true);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .eq("id", user.getId())
                     .set("userRole", 2)
                     .setSql("updateTime = now()");
             if (!update(wrapper)) {
-                UserExceptionEnumeration.USER_SEAL_FAILED.throwUserException();
+                UserEE.USER_SEAL_FAILED.throwE();
+            }
+        } catch (RuntimeException e) {
+            throw new UserException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void unsealUser(UserIdRequest userIdRequest, User currentUser) throws UserException {
+        try {
+            User user = checkId(User.class, userIdRequest.getUserId(), this);
+            checkUserInformation(checkId(User.class, currentUser.getId(), this), currentUser);
+            checkUserRole(currentUser, true);
+            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+            wrapper
+                    .eq("id", user.getId())
+                    .set("userRole", 0)
+                    .setSql("updateTime = now()");
+            if (!update(wrapper)) {
+                UserEE.USER_UNSEAL_FAILED.throwE();
             }
         } catch (RuntimeException e) {
             throw new UserException(e.getMessage(), e);

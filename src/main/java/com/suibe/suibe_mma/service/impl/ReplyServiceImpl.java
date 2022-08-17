@@ -6,10 +6,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
-import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
-import com.suibe.suibe_mma.enumeration.ReplyExceptionEnumeration;
+import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.exception.UserException;
@@ -27,6 +26,7 @@ import javax.annotation.Resource;
 
 import java.util.List;
 
+import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
 import static com.suibe.suibe_mma.util.ServiceUtil.*;
 
 /**
@@ -59,22 +59,24 @@ public class ReplyServiceImpl
     private RedisTemplate<String, Object> template;
 
     @Override
-    public void writeReply(@NotNull ReplyWriteRequest replyWriteRequest) throws ReplyException {
+    public void writeReply(
+            @NotNull ReplyWriteRequest replyWriteRequest,
+            User currentUser) throws ReplyException {
         Integer userId = replyWriteRequest.getUserId();
         Long topicId = replyWriteRequest.getTopicId();
         String replyContent = replyWriteRequest.getReplyContent();
         try {
-            checkId(User.class, userId, userService);
+            checkUserInformation(checkId(User.class, userId, userService), currentUser);
             checkId(Topic.class, topicId, topicService);
             if (replyContent == null || "".equals(replyContent)) {
-                ReplyExceptionEnumeration.REPLY_CONTENT_IS_EMPTY.throwReplyException();
+                ReplyEE.REPLY_CONTENT_IS_EMPTY.throwE();
             }
             Reply reply = new Reply();
             reply.setUserId(userId);
             reply.setTopicId(topicId);
             reply.setReplyContent(replyContent);
             if (!save(reply)) {
-                ReplyExceptionEnumeration.REPLY_SAVE_FAILED.throwReplyException();
+                ReplyEE.REPLY_SAVE_FAILED.throwE();
             }
             UpdateWrapper<Topic> wrapper = new UpdateWrapper<>();
             wrapper
@@ -82,7 +84,7 @@ public class ReplyServiceImpl
                     .setSql("replyNum = replyNum + 1")
                     .setSql("updateTime = now()");
             if (!topicService.update(wrapper)) {
-                ReplyExceptionEnumeration.REPLY_TOPIC_REPLYNUM_ADD_FAILED.throwReplyException();
+                ReplyEE.REPLY_TOPIC_REPLYNUM_ADD_FAILED.throwE();
             }
         } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
@@ -135,11 +137,10 @@ public class ReplyServiceImpl
         try {
             Long replyId = reply.getReplyId();
             Reply reply1 = checkId(Reply.class, replyId, this);
-            if (reply.equals(reply1)) {
-                return checkId(User.class, reply.getUserId(), userService);
+            if (!reply.equals(reply1)) {
+                ReplyEE.REPLY_MESSAGE_WRONG.throwE();
             }
-            ReplyExceptionEnumeration.REPLY_MESSAGE_WRONG.throwReplyException();
-            return null;
+            return checkId(User.class, reply1.getUserId(), userService);
         } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
@@ -158,21 +159,32 @@ public class ReplyServiceImpl
     }
 
     @Override
-    public Long deleteByAuthor(
+    public Long deleteByAuthorOrNot(
             @NotNull ReplyIdRequest replyIdRequest,
-            Integer userId) throws ReplyException {
+            User user,
+            boolean isAuthor) throws ReplyException {
         try {
             Long replyId = replyIdRequest.getReplyId();
-            checkId(User.class, userId, userService);
+            User getUser = checkId(User.class, user.getId(), userService);
+            checkUserInformation(getUser, user);
             Reply reply = checkId(Reply.class, replyId, this);
-            if (reply.getUserId().equals(userId)) {
-                if (!removeById(reply)) {
-                    ReplyExceptionEnumeration.REPLY_REMOVE_FAILED.throwReplyException();
-                }
-            } else {
-                ReplyExceptionEnumeration.REPLY_USERID_MATCH_FALIED.throwReplyException();
-            }
+            replyDelete(reply, getUser, this, topicService, isAuthor);
             return replyId;
+        } catch (RuntimeException e) {
+            throw new ReplyException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<Long> deleteBatchByAuthorOrNot(
+            List<Long> ids,
+            User user,
+            boolean isAuthor) throws ReplyException {
+        try {
+            User getUser = checkId(User.class, user.getId(), userService);
+            checkUserInformation(getUser, user);
+            replyDeleteBatch(ids, getUser, this, topicService, isAuthor);
+            return ids;
         } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }

@@ -5,7 +5,7 @@ import com.suibe.suibe_mma.exception.UserException;
 /**
  * 用户相关异常信息枚举类
  */
-public enum  UserExceptionEnumeration {
+public enum UserEE {
     /**
      * 用户登录等操作时显示用户不存在
      */
@@ -13,7 +13,7 @@ public enum  UserExceptionEnumeration {
     /**
      * 用户登录时显示账号名或密码错误
      */
-    USER_ACCOUNT_OR_PASSWORD_WRONG("账号名或密码错误"),
+    USER_ACCOUNT_OR_PASSWORD_WRONG("账号或密码错误"),
     /**
      * 用户注册时显示该用户名已存在
      */
@@ -21,7 +21,7 @@ public enum  UserExceptionEnumeration {
     /**
      * 用户注册时显示账户名或密码不合规定
      */
-    USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG("账号名或密码格式错误"),
+    USER_ACCOUNT_OR_PASSWORD_FORMAT_WRONG("账号或密码格式错误"),
     /**
      * 用户注册时添加失败
      */
@@ -33,7 +33,7 @@ public enum  UserExceptionEnumeration {
     /**
      * 获取当前对象时与数据库中的信息不一致
      */
-    USER_INFORMATION_WRONG("用户信息不一致"),
+    USER_INFORMATION_WRONG("用户信息不匹配"),
     /**
      * 用户对其昵称等信息更新时失败
      */
@@ -41,7 +41,7 @@ public enum  UserExceptionEnumeration {
     /**
      * 用户id已删除或不存在
      */
-    USER_ID_WRONG("用户ID不存在"),
+    USER_ID_WRONG("用户ID无效"),
     /**
      * 用户积分更新失败
      */
@@ -73,7 +73,15 @@ public enum  UserExceptionEnumeration {
     /**
      * 用户封号失败
      */
-    USER_SEAL_FAILED("用户封号失败");
+    USER_SEAL_FAILED("用户封号失败"),
+    /**
+     * 该用户不为管理员
+     */
+    USER_NOT_MANAGER("该用户不为管理员"),
+    /**
+     * 用户解封失败
+     */
+    USER_UNSEAL_FAILED("用户解封失败");
 
     /**
      * 异常信息
@@ -84,7 +92,7 @@ public enum  UserExceptionEnumeration {
      * 异常信息构造器
      * @param message 异常信息
      */
-    UserExceptionEnumeration(String message) {
+    UserEE(String message) {
         this.message = message;
     }
 
@@ -92,7 +100,7 @@ public enum  UserExceptionEnumeration {
      * 根据枚举类抛出相应的异常信息
      * @throws UserException 用户相关操作异常
      */
-    public void throwUserException() throws UserException {
+    public void throwE() throws UserException {
         throw new UserException(message);
     }
 
@@ -101,7 +109,7 @@ public enum  UserExceptionEnumeration {
      * @param e 来源异常
      * @throws UserException 用户相关操作异常
      */
-    public void throwUserException(Exception e) throws UserException {
+    public void throwE(Exception e) throws UserException {
         throw new UserException(message, e);
     }
 }

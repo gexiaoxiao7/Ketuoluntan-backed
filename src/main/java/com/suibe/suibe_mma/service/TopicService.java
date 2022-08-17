@@ -62,13 +62,28 @@ public interface TopicService
             Integer id) throws TopicException;
 
     /**
-     * 题目作者删除题目
+     * 作者或管理员删除题目
      * @param topicIdRequest 题目id类
-     * @param userId 用户唯一标识
+     * @param user 用户信息
+     * @param isAuthor 是否是作者
      * @return 题目信息
      * @throws TopicException 作者id无效或为空，删除题目失败，id不匹配
      */
-    Topic deleteByAuthor(
+    Topic deleteByAuthorOrNot(
             TopicIdRequest topicIdRequest,
-            Integer userId) throws TopicException;
+            User user,
+            boolean isAuthor) throws TopicException;
+
+    /**
+     * 作者或管理员批量删除题目
+     * @param ids 题目id列表
+     * @param user 用户唯一标识
+     * @param isAuthor 是否是作者
+     * @return 题目信息列表
+     * @throws TopicException 作者id无效或为空，删除题目失败，id不匹配
+     */
+    List<Topic> deleteBatchByAuthorOrNot(
+            List<Long> ids,
+            User user,
+            boolean isAuthor) throws TopicException;
 }

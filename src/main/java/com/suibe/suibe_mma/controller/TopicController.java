@@ -1,12 +1,10 @@
 package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.TopicIdRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
-import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
@@ -20,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static com.suibe.suibe_mma.util.ControllerUtil.getCurrent;
+import static com.suibe.suibe_mma.util.ControllerUtil.*;
 import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 
 /**
@@ -31,11 +29,14 @@ import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 public class TopicController {
 
     /**
-     * 注入TopicService
+     * 注入topicService
      */
     @Resource
     private TopicService topicService;
 
+    /**
+     * 注入replyService
+     */
     @Resource
     private ReplyService replyService;
 
@@ -47,17 +48,16 @@ public class TopicController {
     /**
      * 上传题目控制方法
      * @param topicUploadRequest 题目上传实例
+     * @param request 请求域对象
      * @return 上传是否成功提示信息
      */
     @PostMapping("/upload")
     public String upload(
             @RequestBody TopicUploadRequest topicUploadRequest,
-            HttpServletRequest request) {
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (topicUploadRequest == null) {
-                return "请求失败";
-            }
+            requestFail(topicUploadRequest);
             getCurrent(session);
             session.setAttribute(
                     UserService.USER_LOGIN_STATE,
@@ -71,6 +71,7 @@ public class TopicController {
 
     /**
      * 取消点赞或者添加点赞
+     * @param topic 题目信息
      * @param request 请求域对象
      * @return 题目信息
      */
@@ -80,11 +81,8 @@ public class TopicController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (topic == null) {
-                throw new RuntimeException("题目信息传递失败");
-            }
-            User originUser = getCurrent(session);
-            Integer id = originUser.getId();
+            requestFail(topic);
+            Integer id = getCurrent(session).getId();
             lock.lock();
             Topic topic_plus = topicService.like(topic.getTopicId(), id);
             session.setAttribute("errMsg", null);
@@ -104,6 +102,8 @@ public class TopicController {
 
     /**
      * 获取所有题目信息
+     * @param request 请求域对象
+     * @return 题目列表
      */
     @GetMapping("/getTotalTopic")
     public List<Topic> getTotalTopic(@NotNull HttpServletRequest request) {
@@ -131,6 +131,9 @@ public class TopicController {
 
     /**
      * 根据题目Id获取题目信息
+     * @param topicIdRequest 题目id类
+     * @param request 请求域对象
+     * @return 题目信息
      */
     @PostMapping("/getTopicById")
     public Topic getTopicById(
@@ -138,9 +141,7 @@ public class TopicController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (topicIdRequest == null) {
-                throw new RuntimeException("题目id传递失败");
-            }
+            requestFail(topicIdRequest);
             Topic topic = checkId(Topic.class, topicIdRequest.getTopicId(), topicService);
             session.setAttribute("errMsg", null);
             return topic;
@@ -180,9 +181,7 @@ public class TopicController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (topic == null) {
-                throw new RuntimeException("题目信息传递失败");
-            }
+            requestFail(topic);
             User author = topicService.getAuthor(topic);
             session.setAttribute("errMsg", null);
             return author;
@@ -192,28 +191,92 @@ public class TopicController {
         }
     }
 
+    /**
+     * 题目作者删除题目
+     * @param topicIdRequest 题目id类
+     * @param request 请求域对象
+     * @return 题目id
+     */
     @PostMapping("/deleteByAuthor")
     public Long deleteByAuthor(
             @RequestBody TopicIdRequest topicIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (topicIdRequest == null) {
-                throw new RuntimeException("题目id传递失败");
-            }
-            Topic topic = topicService.deleteByAuthor(topicIdRequest, getCurrent(session).getId());
-            List<Reply> topicReply = replyService.getTopicReply(topic);
-            topicReply.forEach(reply -> {
-                reply.setUpdateTime(null);
-                session.setAttribute("replyId:" + reply.getReplyId(), null);
-            });
-            if (!replyService.removeBatchByIds(topicReply)) {
-                TopicExceptionEnumeration.TOPIC_REMOVE_REPLY_FAILED.throwTopicException();
-            }
-            Long topicId = topic.getTopicId();
-            session.setAttribute("topicId:" + topicId, null);
+            requestFail(topicIdRequest);
+            Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session), true);
+            removeReplyByTopic(session, topic, replyService);
             session.setAttribute("errMsg", null);
-            return topicId;
+            return topic.getTopicId();
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 题目作者批量删除题目
+     * @param ids 题目id列表
+     * @param request 请求域对象
+     * @return 题目id列表
+     */
+    @PostMapping("/deleteBatchByAuthor")
+    public List<Long> deleteBatchByAuthor(
+            @RequestBody List<Long> ids,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(ids);
+            List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session), true);
+            topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
+            session.setAttribute("errMsg", null);
+            return ids;
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 管理员删除题目
+     * @param topicIdRequest 题目id类
+     * @param request 请求域对象
+     * @return 题目id
+     */
+    @PostMapping("/deleteByManager")
+    public Long deleteByManager(
+            @RequestBody TopicIdRequest topicIdRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(topicIdRequest);
+            Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session), false);
+            removeReplyByTopic(session, topic, replyService);
+            session.setAttribute("errMsg", null);
+            return topic.getTopicId();
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 管理员批量删除题目
+     * @param ids 题目id列表
+     * @param request 请求域对象
+     * @return 题目id列表
+     */
+    @PostMapping("/deleteBatchByManager")
+    public List<Long> deleteBatchByManager(
+            @RequestBody List<Long> ids,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(ids);
+            List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session), false);
+            topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
+            session.setAttribute("errMsg", null);
+            return ids;
         } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;

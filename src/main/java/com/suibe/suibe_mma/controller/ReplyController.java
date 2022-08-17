@@ -5,7 +5,6 @@ import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
-import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.service.ReplyService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +17,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.suibe.suibe_mma.util.ControllerUtil.getCurrent;
+import static com.suibe.suibe_mma.util.ControllerUtil.requestFail;
 
 /**
  * 回复相关操作类
@@ -40,17 +40,20 @@ public class ReplyController {
     /**
      * 写回复
      * @param replyWriteRequest 回复请求对象
+     * @param request 请求域对象
      * @return 提示信息
      */
     @PostMapping("/writeReply")
-    public String writeReply(@RequestBody ReplyWriteRequest replyWriteRequest) {
+    public String writeReply(
+            @RequestBody ReplyWriteRequest replyWriteRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
         try {
-            if (replyWriteRequest == null) {
-                return "请求失败";
-            }
-            replyService.writeReply(replyWriteRequest);
+            requestFail(replyWriteRequest);
+            User current = getCurrent(session);
+            replyService.writeReply(replyWriteRequest, current);
             return "回复成功";
-        } catch (ReplyException e) {
+        } catch (RuntimeException e) {
             return e.getMessage();
         }
     }
@@ -64,7 +67,16 @@ public class ReplyController {
     public List<Reply> getMyReply(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            List<Reply> list = replyService.getAllReplyByUserId(getCurrent(session).getId());
+            Integer id = getCurrent(session).getId();
+            List<Reply> list = replyService.getAllReplyByUserId(id);
+            list.forEach(
+                    reply -> {
+                        Integer integer = replyService.replyLikeHelp(reply, id);
+                        if (integer == 1) {
+                            session.setAttribute("replyId:" + reply.getReplyId(), 1);
+                        }
+                    }
+            );
             session.setAttribute("errMsg", null);
             return list;
         } catch (RuntimeException e) {
@@ -85,9 +97,7 @@ public class ReplyController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (reply == null) {
-                throw new RuntimeException("回复信息传递失败");
-            }
+            requestFail(reply);
             lock.lock();
             Integer id = getCurrent(session).getId();
             Reply reply_plus = replyService.like(reply.getReplyId(), id);
@@ -119,9 +129,7 @@ public class ReplyController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (topic == null) {
-                throw new RuntimeException("题目信息传递失败");
-            }
+            requestFail(topic);
             Integer id = getCurrent(session).getId();
             List<Reply> replies = replyService.getTopicReply(topic);
             replies.forEach(
@@ -152,9 +160,7 @@ public class ReplyController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (reply == null) {
-                throw new RuntimeException("回复信息传递失败");
-            }
+            requestFail(reply);
             User author = replyService.getAuthor(reply);
             session.setAttribute("errMsg", null);
             return author;
@@ -176,13 +182,76 @@ public class ReplyController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (replyIdRequest == null) {
-                throw new RuntimeException("回复id传递失败");
-            }
-            Long replyId = replyService.deleteByAuthor(replyIdRequest, getCurrent(session).getId());
+            requestFail(replyIdRequest);
+            Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session), true);
             session.setAttribute("replyId:" + replyId, null);
             session.setAttribute("errMsg", null);
             return replyId;
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 作者批量删除回复
+     * @param ids 回复id列表
+     * @param request 请求域对象
+     * @return 回复id列表
+     */
+    @PostMapping("/deleteBatchByAuthor")
+    public List<Long> deleteBatchByAuthor(
+            @RequestBody List<Long> ids,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(ids);
+            replyService
+                    .deleteBatchByAuthorOrNot(ids, getCurrent(session), true)
+                    .forEach(replyId -> session.setAttribute("replyId:" + replyId, null));
+            session.setAttribute("errMsg", null);
+            return ids;
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 管理员删除回复
+     * @param replyIdRequest 回复id类
+     * @param request 请求域对象
+     * @return 回复id
+     */
+    @PostMapping("/deleteByManager")
+    public Long deleteByManager(
+            @RequestBody ReplyIdRequest replyIdRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(replyIdRequest);
+            Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session), false);
+            session.setAttribute("replyId:" + replyId, null);
+            session.setAttribute("errMsg", null);
+            return replyId;
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    @PostMapping("/deleteBatchByManager")
+    public List<Long> deleteBatchByManager(
+            @RequestBody List<Long> ids,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(ids);
+            replyService
+                    .deleteBatchByAuthorOrNot(ids, getCurrent(session), false)
+                    .forEach(replyId -> session.setAttribute("replyId:" + replyId, null));
+            session.setAttribute("errMsg", null);
+            return ids;
         } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;

@@ -2,7 +2,7 @@ package com.suibe.suibe_mma.enumeration;
 
 import com.suibe.suibe_mma.exception.ReplyException;
 
-public enum ReplyExceptionEnumeration {
+public enum ReplyEE {
     /**
      * 回复的内容为null或""
      */
@@ -30,7 +30,7 @@ public enum ReplyExceptionEnumeration {
     /**
      * 题目回复数修改失败
      */
-    REPLY_TOPIC_REPLYNUM_ADD_FAILED("题目回复数修改失败"),
+    REPLY_TOPIC_REPLYNUM_ADD_FAILED("题目回复数增加失败"),
     /**
      * 回复删除失败
      */
@@ -38,7 +38,11 @@ public enum ReplyExceptionEnumeration {
     /**
      * 回复作者id不匹配
      */
-    REPLY_USERID_MATCH_FALIED("回复作者id不匹配");
+    REPLY_USERID_MATCH_FALIED("回复作者id不匹配"),
+    /**
+     * 题目回复数修改失败
+     */
+    REPLY_TOPIC_REPLYNUM_SUB_FAILED("回复对应题目回复数减少失败");
 
     /**
      * 异常信息
@@ -49,7 +53,7 @@ public enum ReplyExceptionEnumeration {
      * 异常信息构造方法
      * @param message 异常信息
      */
-    ReplyExceptionEnumeration(String message) {
+    ReplyEE(String message) {
         this.message = message;
     }
 
@@ -57,7 +61,7 @@ public enum ReplyExceptionEnumeration {
      * 抛出题目异常
      * @throws ReplyException 回复异常
      */
-    public void throwReplyException() throws ReplyException {
+    public void throwE() throws ReplyException {
         throw new ReplyException(message);
     }
 
@@ -66,7 +70,7 @@ public enum ReplyExceptionEnumeration {
      * @param e 来源异常
      * @throws ReplyException 回复异常
      */
-    public void throwTopicException(Exception e) throws ReplyException {
+    public void throwE(Exception e) throws ReplyException {
         throw new ReplyException(message, e);
     }
 }

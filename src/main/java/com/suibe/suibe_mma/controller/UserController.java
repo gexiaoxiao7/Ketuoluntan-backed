@@ -14,7 +14,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import static com.suibe.suibe_mma.util.ControllerUtil.getCurrent;
+import static com.suibe.suibe_mma.util.ControllerUtil.*;
+import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 
 /**
@@ -38,10 +39,8 @@ public class UserController {
      */
     @PostMapping("/register")
     public String register(@RequestBody UserRegisterRequest userRegisterRequest) {
-        if (userRegisterRequest == null) {
-            return "请求失败";
-        }
         try {
+            requestFail(userRegisterRequest);
             userService.register(userRegisterRequest);
             return "注册成功";
         } catch (UserException e) {
@@ -62,13 +61,9 @@ public class UserController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (userLoginRequest == null) {
-                throw new RuntimeException("请求失败");
-            }
+            requestFail(userLoginRequest);
             User user = userService.login(userLoginRequest);
-            if (user.getUserRole() == 2) {
-                throw new RuntimeException("该用户已被封号");
-            }
+            checkUserRole(user, false);
             session.setAttribute(userService.USER_LOGIN_STATE, user);
             session.setAttribute("errMsg", null);
             return user;
@@ -100,6 +95,8 @@ public class UserController {
 
     /**
      * 根据用户ID当获取用户信息
+     * @param userIdRequest 用户id类
+     * @param request 请求域对象
      * @return 用户信息
      */
     @PostMapping("/searchByUserId")
@@ -108,9 +105,7 @@ public class UserController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (userIdRequest == null) {
-                throw new RuntimeException("用户id传递失败");
-            }
+            requestFail(userIdRequest);
             User user = checkId(User.class, userIdRequest.getUserId(), userService);
             session.setAttribute("errMsg", null);
             return user;
@@ -132,9 +127,7 @@ public class UserController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (user == null) {
-                throw new RuntimeException("请求失败");
-            }
+            requestFail(user);
             User originUser = getCurrent(session);
             if (originUser.equals(user)) {
                 throw new RuntimeException("用户信息无变动");
@@ -176,6 +169,7 @@ public class UserController {
     /**
      * 更改密码
      * @param userChangePasswordRequest 更改密码信息实例
+     * @param request 请求域对象
      * @return 提示信息
      */
     @PostMapping("/changePassword")
@@ -184,13 +178,10 @@ public class UserController {
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (userChangePasswordRequest == null) {
-                return "请求失败";
-            }
-            getCurrent(session);
+            requestFail(userChangePasswordRequest);
             session.setAttribute(
                     UserService.USER_LOGIN_STATE,
-                    userService.changePassword(userChangePasswordRequest)
+                    userService.changePassword(userChangePasswordRequest, getCurrent(session))
             );
             return "修改密码成功";
         } catch (RuntimeException e) {
@@ -198,19 +189,40 @@ public class UserController {
         }
     }
 
+    /**
+     * 管理员封号用户
+     * @param userIdRequest 用户id类
+     * @param request 请求域对象
+     * @return 用户id
+     */
     @PostMapping("/sealUser")
     public Integer sealUser(
             @RequestBody UserIdRequest userIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            if (userIdRequest == null) {
-                throw new RuntimeException("用户id传递失败");
-            }
-            if (getCurrent(session).getUserRole() != 1) {
-                throw new RuntimeException("当前用户不为管理员，操作失败");
-            }
-            userService.sealUser(userIdRequest);
+            sealUserOrNot(userIdRequest, session, userService, true);
+            session.setAttribute("errMsg", null);
+            return userIdRequest.getUserId();
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 管理员解封用户
+     * @param userIdRequest 用户id类
+     * @param request 请求域对象
+     * @return 用户id
+     */
+    @PostMapping("/unsealUser")
+    public Integer unsealUser(
+            @RequestBody UserIdRequest userIdRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            sealUserOrNot(userIdRequest, session, userService, false);
             session.setAttribute("errMsg", null);
             return userIdRequest.getUserId();
         } catch (RuntimeException e) {

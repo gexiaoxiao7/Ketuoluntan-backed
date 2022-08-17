@@ -3,7 +3,7 @@ package com.suibe.suibe_mma.domain;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
-import com.suibe.suibe_mma.enumeration.UserExceptionEnumeration;
+import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.UserException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +15,7 @@ import java.util.Date;
  * 用户信息类
  */
 @Data
-@EqualsAndHashCode(exclude = {"score"})
+@EqualsAndHashCode(exclude = {"score", "updateTime"})
 @TableName("mma_user")
 public class User
         implements Serializable, Checkable<User, Integer> {
@@ -118,11 +118,14 @@ public class User
             Integer id,
             IService<User> service) throws UserException {
         if (id == null) {
-            UserExceptionEnumeration.USER_ID_IS_NULL.throwUserException();
+            UserEE.USER_ID_IS_NULL.throwE();
         }
         User user = service.getById(id);
         if (user == null) {
-            UserExceptionEnumeration.USER_ID_WRONG.throwUserException();
+            UserEE.USER_ID_WRONG.throwE();
+        }
+        if (user.getUserRole() == 2) {
+            UserEE.USER_SEALED.throwE();
         }
         return user;
     }

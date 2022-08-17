@@ -5,7 +5,7 @@ import com.suibe.suibe_mma.exception.TopicException;
 /**
  * 题目相关操作异常枚举类
  */
-public enum TopicExceptionEnumeration {
+public enum TopicEE {
     /**
      * 题目标题为""或null
      */
@@ -52,7 +52,7 @@ public enum TopicExceptionEnumeration {
      * 异常信息构造方法
      * @param message 异常信息
      */
-    TopicExceptionEnumeration(String message) {
+    TopicEE(String message) {
         this.message = message;
     }
 
@@ -60,7 +60,7 @@ public enum TopicExceptionEnumeration {
      * 抛出题目异常
      * @throws TopicException 题目异常
      */
-    public void throwTopicException() throws TopicException {
+    public void throwE() throws TopicException {
         throw new TopicException(message);
     }
 
@@ -69,7 +69,7 @@ public enum TopicExceptionEnumeration {
      * @param e 来源异常
      * @throws TopicException 题目异常
      */
-    public void throwTopicException(Exception e) throws TopicException {
+    public void throwE(Exception e) throws TopicException {
         throw new TopicException(message, e);
     }
 }

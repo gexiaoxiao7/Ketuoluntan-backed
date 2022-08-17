@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
-import com.suibe.suibe_mma.enumeration.TopicExceptionEnumeration;
+import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.exception.TopicException;
-import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,7 +22,7 @@ import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
  * 题目信息类
  */
 @Data
-@EqualsAndHashCode(exclude = {"topicLikes"})
+@EqualsAndHashCode(exclude = {"topicLikes", "updateTime"})
 @TableName("mma_topic")
 public class Topic
         implements Serializable, Likable<Topic>, Checkable<Topic, Long> {
@@ -123,7 +122,7 @@ public class Topic
         }
         updateTime = null;
         if (!service.updateById(this)) {
-            TopicExceptionEnumeration.TOPIC_LIKE_UPDATE_FAILED.throwTopicException();
+            TopicEE.TOPIC_LIKE_UPDATE_FAILED.throwE();
         }
         userService.update(likeHelper(tflag, this.userId));
         return service.getById(topicId);
@@ -134,11 +133,11 @@ public class Topic
             Long id,
             IService<Topic> service) throws RuntimeException {
         if (id == null) {
-            TopicExceptionEnumeration.TOPIC_ID_IS_NULL.throwTopicException();
+            TopicEE.TOPIC_ID_IS_NULL.throwE();
         }
         Topic topic = service.getById(id);
         if (topic == null) {
-            TopicExceptionEnumeration.TOPIC_ID_IS_WRONG.throwTopicException();
+            TopicEE.TOPIC_ID_IS_WRONG.throwE();
         }
         return topic;
     }
