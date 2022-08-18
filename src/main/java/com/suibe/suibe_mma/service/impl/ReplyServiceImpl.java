@@ -87,7 +87,7 @@ public class ReplyServiceImpl
             if (!topicService.update(wrapper)) {
                 ReplyEE.REPLY_TOPIC_REPLYNUM_ADD_FAILED.throwE();
             }
-            return userService.changeScore(getUser, 8);
+            return userService.changeScore(getUser, 5);
         } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
