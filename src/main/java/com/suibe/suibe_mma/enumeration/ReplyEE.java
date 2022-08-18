@@ -42,7 +42,11 @@ public enum ReplyEE {
     /**
      * 题目回复数修改失败
      */
-    REPLY_TOPIC_REPLYNUM_SUB_FAILED("回复对应题目回复数减少失败");
+    REPLY_TOPIC_REPLYNUM_SUB_FAILED("回复对应题目回复数减少失败"),
+    /**
+     * 回复作者积分更新失败
+     */
+    REPLY_USER_SCORE_UPDATE_FAILED("回复作者积分更新失败");
 
     /**
      * 异常信息

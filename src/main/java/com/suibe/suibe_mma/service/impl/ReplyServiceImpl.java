@@ -59,14 +59,15 @@ public class ReplyServiceImpl
     private RedisTemplate<String, Object> template;
 
     @Override
-    public void writeReply(
+    public User writeReply(
             @NotNull ReplyWriteRequest replyWriteRequest,
             User currentUser) throws ReplyException {
         Integer userId = replyWriteRequest.getUserId();
         Long topicId = replyWriteRequest.getTopicId();
         String replyContent = replyWriteRequest.getReplyContent();
         try {
-            checkUserInformation(checkId(User.class, userId, userService), currentUser);
+            User getUser = checkId(User.class, userId, userService);
+            checkUserInformation(getUser, currentUser);
             checkId(Topic.class, topicId, topicService);
             if (replyContent == null || "".equals(replyContent)) {
                 ReplyEE.REPLY_CONTENT_IS_EMPTY.throwE();
@@ -86,6 +87,7 @@ public class ReplyServiceImpl
             if (!topicService.update(wrapper)) {
                 ReplyEE.REPLY_TOPIC_REPLYNUM_ADD_FAILED.throwE();
             }
+            return userService.changeScore(getUser, 8);
         } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }

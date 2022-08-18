@@ -1,7 +1,7 @@
 package com.suibe.suibe_mma;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.request.*;
 import com.suibe.suibe_mma.mapper.UserMapper;
@@ -74,7 +74,12 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test4() {
-
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper
+                .orderByDesc("score")
+                .orderByAsc("createTime")
+                .ne("userRole", 2);
+        userService.list(wrapper).forEach(System.out::println);
     }
 
     @Test

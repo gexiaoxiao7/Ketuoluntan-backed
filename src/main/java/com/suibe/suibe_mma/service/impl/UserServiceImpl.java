@@ -121,7 +121,7 @@ public class UserServiceImpl
             if (!update(getUser, wrapper)) {
                 UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }
-            return getUser;
+            return getById(id);
         } catch (RuntimeException e) {
             throw new UserException(e.getMessage(), e);
         }

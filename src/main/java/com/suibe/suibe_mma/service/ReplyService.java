@@ -19,9 +19,10 @@ public interface ReplyService
      * 写回复
      * @param replyWriteRequest 写回复信息类
      * @param currentUser 当前登录用户信息
+     * @return 用户信息
      * @throws ReplyException 回复内容为空或添加失败
      */
-    void writeReply(
+    User writeReply(
             ReplyWriteRequest replyWriteRequest,
             User currentUser) throws ReplyException;
 

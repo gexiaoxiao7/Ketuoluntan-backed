@@ -1,5 +1,6 @@
 package com.suibe.suibe_mma.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.*;
 import com.suibe.suibe_mma.exception.UserException;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+
+import java.util.List;
 
 import static com.suibe.suibe_mma.util.ControllerUtil.*;
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
@@ -256,6 +259,12 @@ public class UserController {
         }
     }
 
+    /**
+     * 赋予管理员权限
+     * @param userIdRequest 用户id类
+     * @param request 请求域对象
+     * @return 用户id
+     */
     @PostMapping("/giveManager")
     public Integer giveManager(
             UserIdRequest userIdRequest,
@@ -274,5 +283,15 @@ public class UserController {
             session.setAttribute("errMsg", e.getMessage());
             return null;
         }
+    }
+
+    @PostMapping("/rankings")
+    public List<User> rankings() {
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper
+                .orderByDesc("score")
+                .orderByAsc("createTime")
+                .ne("userRole", 2);
+        return userService.list(wrapper);
     }
 }

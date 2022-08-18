@@ -6,6 +6,7 @@ import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.service.ReplyService;
+import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +52,10 @@ public class ReplyController {
         try {
             requestFail(replyWriteRequest);
             User current = getCurrent(session);
-            replyService.writeReply(replyWriteRequest, current);
+            session.setAttribute(
+                    UserService.USER_LOGIN_STATE,
+                    replyService.writeReply(replyWriteRequest, current)
+            );
             return "回复成功";
         } catch (RuntimeException e) {
             return e.getMessage();
