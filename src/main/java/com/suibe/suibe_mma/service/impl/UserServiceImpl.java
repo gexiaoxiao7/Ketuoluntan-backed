@@ -212,7 +212,17 @@ public class UserServiceImpl
             UserIdRequest userIdRequest,
             User currentUser) throws UserException {
         try {
-            User user = checkId(User.class, userIdRequest.getUserId(), this);
+            Integer userId = userIdRequest.getUserId();
+            if (userId == null) {
+                UserEE.USER_ID_IS_NULL.throwE();
+            }
+            User user = getById(userId);
+            if (user == null) {
+                UserEE.USER_ID_WRONG.throwE();
+            }
+            if (user.getUserRole() != 2) {
+                throw new UserException("该用户未被封");
+            }
             checkUserInformation(checkId(User.class, currentUser.getId(), this), currentUser);
             checkUserRole(currentUser, true, false);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();

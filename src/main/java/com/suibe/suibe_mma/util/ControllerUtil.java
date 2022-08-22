@@ -79,6 +79,7 @@ public class ControllerUtil {
             UserService userService,
             boolean isSeal) throws RuntimeException {
         requestFail(userIdRequest);
+
         if (isSeal) {
             userService.sealUser(userIdRequest, getCurrent(session));
         } else {

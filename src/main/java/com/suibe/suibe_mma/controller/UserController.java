@@ -3,10 +3,12 @@ package com.suibe.suibe_mma.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.*;
+import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -267,7 +269,7 @@ public class UserController {
      */
     @PostMapping("/giveManager")
     public Integer giveManager(
-            UserIdRequest userIdRequest,
+            @RequestBody UserIdRequest userIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
@@ -278,7 +280,7 @@ public class UserController {
             checkUserRole(user, false, true);
             userService.giveManager(user);
             session.setAttribute("errMsg", null);
-            return null;
+            return user.getId();
         } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
@@ -294,4 +296,14 @@ public class UserController {
                 .ne("userRole", 2);
         return userService.list(wrapper);
     }
+
+    @PostMapping("/getAllUsers")
+    public List<User> getAllUsers() {
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper
+                .orderByDesc("score")
+                .orderByAsc("createTime");
+        return userService.list(wrapper);
+    }
 }
+
