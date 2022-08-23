@@ -3,6 +3,7 @@ package com.suibe.suibe_mma.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.request.SearchTitleRequest;
 import com.suibe.suibe_mma.domain.request.TopicIdRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.exception.TopicException;
@@ -86,4 +87,12 @@ public interface TopicService
             List<Long> ids,
             User user,
             boolean isAuthor) throws TopicException;
+
+    /**
+     * 根据搜索题目信息查询题目
+     * @param searchTitleRequest 查询题目相关请求类
+     * @return 题目列表
+     * @throws TopicException 无搜索结果
+     */
+    List<Topic> searchTitle(SearchTitleRequest searchTitleRequest) throws TopicException;
 }

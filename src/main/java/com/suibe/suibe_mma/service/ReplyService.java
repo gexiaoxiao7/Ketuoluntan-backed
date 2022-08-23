@@ -8,6 +8,7 @@ import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.exception.ReplyException;
 
+import javax.servlet.http.HttpSession;
 import java.util.List;
 
 /**
@@ -97,4 +98,14 @@ public interface ReplyService
             List<Long> ids,
             User user,
             boolean isAuthor) throws ReplyException;
+
+    /**
+     * 删除题目时删除回复
+     * @param topicReply 回复信息列表
+     * @param session session域对象
+     * @throws ReplyException 删除回复失败
+     */
+    void deleteBatch(
+            List<Reply> topicReply,
+            HttpSession session) throws ReplyException;
 }

@@ -4,12 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.request.SearchTitleRequest;
 import com.suibe.suibe_mma.domain.request.TopicIdRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.TopicException;
-import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.TopicMapper;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
@@ -21,18 +21,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
+import java.util.Arrays;
 import java.util.List;
 
+import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.*;
 
 /**
  * 题目服务类实现类
  */
 @Service
-@Transactional(
-        rollbackFor = {TopicException.class},
-        noRollbackFor = {UserException.class}
-        )
+@Transactional
 public class TopicServiceImpl
         extends ServiceImpl<TopicMapper, Topic>
         implements TopicService {
@@ -58,6 +57,7 @@ public class TopicServiceImpl
                 TopicEE.TOPIC_TITLE_IS_SPACE.throwE();
             }
             User user = checkId(User.class, userId, userService);
+            checkUserRole(user, false, false);
             Topic topic = new Topic();
             topic.setUserId(userId);
             topic.setTopicTitle(topicTitle);
@@ -65,7 +65,7 @@ public class TopicServiceImpl
             if (!save(topic)) {
                 TopicEE.TOPIC_INSERT_FAILED.throwE();
             }
-            return userService.changeScore(user, 10);
+            return changeScore(user, 10, userService);
         } catch (RuntimeException e) {
             throw new TopicException(e.getMessage(), e);
         }
@@ -76,7 +76,7 @@ public class TopicServiceImpl
             Long topicId,
             Integer id) throws TopicException {
         try {
-            checkId(User.class, id, userService);
+            checkUserRole(checkId(User.class, id, userService), false, false);
             Topic topic = checkId(Topic.class, topicId, this);
             String key = "suibe:mma:topicId:" + topicId;
             return ServiceUtil.like(id, template, key, topic, this, userService);
@@ -129,13 +129,16 @@ public class TopicServiceImpl
             User user,
             boolean isAuthor) throws TopicException {
         try {
+            Integer id = user.getId();
             Long topicId = topicIdRequest.getTopicId();
-            User getUser = checkId(User.class, user.getId(), userService);
+            User getUser = checkId(User.class, id, userService);
             if (!getUser.equals(user)) {
                 UserEE.USER_INFORMATION_WRONG.throwE();
             }
             Topic topic = checkId(Topic.class, topicId, this);
             topicDelete(topic, getUser, this, isAuthor);
+            changeScore(id, -10 - topic.getTopicLikes(), userService);
+            deleteTopicKey(topic, template);
             return topic;
         } catch (RuntimeException e) {
             throw new TopicException(e.getMessage(), e);
@@ -152,9 +155,30 @@ public class TopicServiceImpl
             if (!getUser.equals(user)) {
                 UserEE.USER_INFORMATION_WRONG.throwE();
             }
-            return topicDeleteBatch(ids, getUser, this, isAuthor);
+            List<Topic> topics = topicDeleteBatch(ids, getUser, this, isAuthor);
+            topics.forEach(topic -> {
+                changeScore(topic.getUserId(), -10 - topic.getTopicLikes(), userService);
+                deleteTopicKey(topic, template);
+            });
+            return topics;
         } catch (RuntimeException e) {
             throw new TopicException(e.getMessage(), e);
         }
+    }
+
+    @Override
+    public List<Topic> searchTitle(@NotNull SearchTitleRequest searchTitleRequest) throws TopicException {
+        String searchTitle = searchTitleRequest.getSearchTitle();
+        if (searchTitle == null || "".equals(searchTitle)) {
+            return list();
+        }
+        String[] split = searchTitle.split("");
+        QueryWrapper<Topic> wrapper = new QueryWrapper<>();
+        Arrays.stream(split).forEach(msg -> wrapper.like("topicTitle", msg).or());
+        List<Topic> list = list(wrapper);
+        if (list.isEmpty()) {
+            TopicEE.TOPIC_SEARCH_TITLE_WRONG.throwE();
+        }
+        return list;
     }
 }

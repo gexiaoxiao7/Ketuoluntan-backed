@@ -1,11 +1,10 @@
 package com.suibe.suibe_mma.util;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.UserIdRequest;
-import com.suibe.suibe_mma.enumeration.TopicEE;
-import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
@@ -48,21 +47,20 @@ public class ControllerUtil {
      * @param session session域对象
      * @param topic 题目信息
      * @param replyService 回复服务类
-     * @throws TopicException 删除回复失败
+     * @throws RuntimeException 删除回复失败
      */
     public static void removeReplyByTopic(
             HttpSession session,
-            Topic topic,
-            @NotNull ReplyService replyService) throws TopicException {
-        List<Reply> topicReply = replyService.getTopicReply(topic);
-        topicReply.forEach(reply -> {
-            reply.setUpdateTime(null);
-            session.setAttribute("replyId:" + reply.getReplyId(), null);
-        });
-        if (!replyService.removeBatchByIds(topicReply)) {
-            TopicEE.TOPIC_REMOVE_REPLY_FAILED.throwE();
+            @NotNull Topic topic,
+            @NotNull ReplyService replyService) throws RuntimeException {
+        Long topicId = topic.getTopicId();
+        QueryWrapper<Reply> wrapper = new QueryWrapper<>();
+        wrapper.eq("topicId", topicId);
+        List<Reply> topicReply = replyService.list(wrapper);
+        if (!topicReply.isEmpty()) {
+            replyService.deleteBatch(topicReply, session);
         }
-        session.setAttribute("topicId:" + topic.getTopicId(), null);
+        session.setAttribute("topicId:" + topicId, null);
     }
 
     /**
@@ -79,7 +77,6 @@ public class ControllerUtil {
             UserService userService,
             boolean isSeal) throws RuntimeException {
         requestFail(userIdRequest);
-
         if (isSeal) {
             userService.sealUser(userIdRequest, getCurrent(session));
         } else {

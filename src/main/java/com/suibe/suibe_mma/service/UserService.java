@@ -59,7 +59,7 @@ public interface UserService
      * @param user 用户信息
      * @param score 用户积分
      * @return 更新后用户信息
-     * @throws UserException 增加用户积分失败
+     * @throws UserException 改变用户积分失败
      */
     User changeScore(
             User user,
@@ -112,4 +112,11 @@ public interface UserService
      * @throws UserException 修改失败
      */
     void giveManager(User user) throws UserException;
+
+    /**
+     * 取消管理员权限
+     * @param user 用户信息
+     * @throws UserException 修改失败
+     */
+    void recaptureManager(User user) throws UserException;
 }

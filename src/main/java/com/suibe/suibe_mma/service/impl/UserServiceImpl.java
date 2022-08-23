@@ -26,7 +26,7 @@ import static com.suibe.suibe_mma.util.ServiceUtil.*;
  * 用户服务类实现类
  */
 @Service
-@Transactional(rollbackFor = {UserException.class})
+@Transactional
 public class UserServiceImpl
         extends ServiceImpl<UserMapper, User>
         implements UserService {
@@ -84,6 +84,7 @@ public class UserServiceImpl
         try {
             Integer userId = currentUser.getId();
             User getUser = checkId(User.class, userId, this);
+            checkUserRole(getUser, false, false);
             checkUserInformation(getUser, currentUser);
             return currentUser;
         }  catch (RuntimeException e) {
@@ -95,7 +96,7 @@ public class UserServiceImpl
     public User updateUserInfo(@NotNull User user) throws UserException {
         try {
             Integer id = user.getId();
-            checkId(User.class, id, this);
+            checkUserRole(checkId(User.class, id, this), false, false);
             user.setUpdateTime(null);
             if (!updateById(user)) {
                 UserEE.USER_INFO_UPDATE_FAILED.throwE();
@@ -114,7 +115,11 @@ public class UserServiceImpl
             Integer id = user.getId();
             User getUser = checkId(User.class, id, this);
             checkUserInformation(getUser, user);
-            getUser.setScore(getUser.getScore() + score);
+            int score_plus = getUser.getScore() + score;
+            if (score_plus < 0) {
+                score_plus = 0;
+            }
+            getUser.setScore(score_plus);
             getUser.setUpdateTime(null);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper.eq("id", id);
@@ -148,7 +153,9 @@ public class UserServiceImpl
             if (!newPassword.equals(newCheckPassword)) {
                 UserEE.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwE();
             }
-            checkUserInformation(checkId(User.class, id, this), currentUser);
+            User user = checkId(User.class, id, this);
+            checkUserRole(user, false, false);
+            checkUserInformation(user, currentUser);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .set("userPassword", encrypt(newPassword))
@@ -212,16 +219,9 @@ public class UserServiceImpl
             UserIdRequest userIdRequest,
             User currentUser) throws UserException {
         try {
-            Integer userId = userIdRequest.getUserId();
-            if (userId == null) {
-                UserEE.USER_ID_IS_NULL.throwE();
-            }
-            User user = getById(userId);
-            if (user == null) {
-                UserEE.USER_ID_WRONG.throwE();
-            }
+            User user = checkId(User.class, userIdRequest.getUserId(), this);
             if (user.getUserRole() != 2) {
-                throw new UserException("该用户未被封");
+                UserEE.USER_NOT_SEAL.throwE();
             }
             checkUserInformation(checkId(User.class, currentUser.getId(), this), currentUser);
             checkUserRole(currentUser, true, false);
@@ -242,6 +242,15 @@ public class UserServiceImpl
     public void giveManager(@NotNull User user) throws UserException {
         user.setUpdateTime(null);
         user.setUserRole(1);
+        if (!updateById(user)) {
+            UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
+        }
+    }
+
+    @Override
+    public void recaptureManager(@NotNull User user) throws UserException {
+        user.setUpdateTime(null);
+        user.setUserRole(0);
         if (!updateById(user)) {
             UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
         }

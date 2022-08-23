@@ -3,12 +3,14 @@ package com.suibe.suibe_mma.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.request.SearchTitleRequest;
 import com.suibe.suibe_mma.domain.request.TopicIdRequest;
 import com.suibe.suibe_mma.domain.request.TopicUploadRequest;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -277,6 +279,29 @@ public class TopicController {
             topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
             session.setAttribute("errMsg", null);
             return ids;
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 根据搜索题目查询题目信息
+     * @param searchTitleRequest 查询题目相关请求类
+     * @param request 请求域对象
+     * @return 题目信息列表
+     */
+    @PostMapping("/searchTitle")
+    public List<Topic> searchTitle(
+            @RequestBody SearchTitleRequest searchTitleRequest,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(searchTitleRequest);
+            getCurrent(session);
+            List<Topic> topics = topicService.searchTitle(searchTitleRequest);
+            session.setAttribute("errMsg", null);
+            return topics;
         } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;

@@ -41,7 +41,19 @@ public enum TopicEE {
     /**
      * 相关题目回复删除失败
      */
-    TOPIC_REMOVE_REPLY_FAILED("相关题目回复删除失败");
+    TOPIC_REMOVE_REPLY_FAILED("相关题目回复删除失败"),
+    /**
+     * 题目id列表为空
+     */
+    TOPIC_IDS_IS_NULL("题目id列表为空"),
+    /**
+     * 题目id列表无效
+     */
+    TOPIC_IDS_IS_WRONG("题目id列表无效"),
+    /**
+     * 无搜索结果
+     */
+    TOPIC_SEARCH_TITLE_WRONG("无搜索结果");
 
     /**
      * 异常信息

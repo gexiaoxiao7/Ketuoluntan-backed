@@ -89,7 +89,19 @@ public enum UserEE {
     /**
      * 该用户不是普通用户
      */
-    USER_NOT_NORMAL("该用户不是普通用户");
+    USER_NOT_NORMAL("该用户不是普通用户"),
+    /**
+     * 用户id列表为空
+     */
+    USER_IDS_IS_NULL("用户id列表为空"),
+    /**
+     * 用户id列表无效
+     */
+    USER_IDS_IS_WRONG("用户id列表无效"),
+    /**
+     * 该用户未被封
+     */
+    USER_NOT_SEAL("该用户未被封");
 
     /**
      * 异常信息

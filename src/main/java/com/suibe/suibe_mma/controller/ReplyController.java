@@ -244,6 +244,12 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 管理员批量删除回复
+     * @param ids 回复id列表
+     * @param request 请求域对象
+     * @return 回复id列表
+     */
     @PostMapping("/deleteBatchByManager")
     public List<Long> deleteBatchByManager(
             @RequestBody List<Long> ids,

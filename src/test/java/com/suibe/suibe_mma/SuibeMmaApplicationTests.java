@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -92,6 +93,24 @@ class SuibeMmaApplicationTests {
     void test6() {
         String[] split = ("topicId:" + 1).split(":");
         System.out.println(Arrays.toString(split));
+    }
+
+    @Test
+    void test7() {
+        ArrayList<Integer> integers = new ArrayList<>();
+        integers.add(1);
+        integers.add(4);
+        integers.add(5);
+        List<User> users = userService.listByIds(integers);
+        users.forEach(System.out::println);
+    }
+
+    @Test
+    void test8() {
+        String message = "123456";
+        SearchTitleRequest searchTitleRequest = new SearchTitleRequest();
+        searchTitleRequest.setSearchTitle(message);
+        topicService.searchTitle(searchTitleRequest).forEach(System.out::println);
     }
 
 }

@@ -46,7 +46,15 @@ public enum ReplyEE {
     /**
      * 回复作者积分更新失败
      */
-    REPLY_USER_SCORE_UPDATE_FAILED("回复作者积分更新失败");
+    REPLY_USER_SCORE_UPDATE_FAILED("回复作者积分更新失败"),
+    /**
+     * 回复id列表为空
+     */
+    REPLY_IDS_IS_NULL("回复id列表为空"),
+    /**
+     * 回复id列表无效
+     */
+    REPLY_IDS_IS_WRONG("回复id列表无效");
 
     /**
      * 异常信息

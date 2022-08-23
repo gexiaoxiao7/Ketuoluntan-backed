@@ -9,7 +9,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 用户信息类
@@ -124,9 +126,20 @@ public class User
         if (user == null) {
             UserEE.USER_ID_WRONG.throwE();
         }
-        if (user.getUserRole() == 2) {
-            UserEE.USER_SEALED.throwE();
-        }
         return user;
+    }
+
+    @Override
+    public List<User> checkPrimaryKey(
+            List<Integer> ids,
+            IService<User> service) throws UserException {
+        if (ids == null) {
+            UserEE.USER_IDS_IS_NULL.throwE();
+        }
+        List<User> users = service.listByIds(ids);
+        if (users.isEmpty()) {
+            UserEE.USER_IDS_IS_WRONG.throwE();
+        }
+        return users;
     }
 }

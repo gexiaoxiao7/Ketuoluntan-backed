@@ -9,9 +9,8 @@ import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
 import com.suibe.suibe_mma.domain.request.ReplyWriteRequest;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
+import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.exception.ReplyException;
-import com.suibe.suibe_mma.exception.TopicException;
-import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.ReplyMapper;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
@@ -23,20 +22,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 
 import java.util.List;
 
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
+import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.*;
 
 /**
  * 回复服务类实现类
  */
 @Service
-@Transactional(
-        rollbackFor = {ReplyException.class},
-        noRollbackFor = {UserException.class, TopicException.class}
-        )
+@Transactional
 public class ReplyServiceImpl
         extends ServiceImpl<ReplyMapper, Reply>
         implements ReplyService {
@@ -67,6 +65,7 @@ public class ReplyServiceImpl
         String replyContent = replyWriteRequest.getReplyContent();
         try {
             User getUser = checkId(User.class, userId, userService);
+            checkUserRole(getUser, false, false);
             checkUserInformation(getUser, currentUser);
             checkId(Topic.class, topicId, topicService);
             if (replyContent == null || "".equals(replyContent)) {
@@ -87,7 +86,7 @@ public class ReplyServiceImpl
             if (!topicService.update(wrapper)) {
                 ReplyEE.REPLY_TOPIC_REPLYNUM_ADD_FAILED.throwE();
             }
-            return userService.changeScore(getUser, 5);
+            return changeScore(getUser, 5, userService);
         } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }
@@ -110,7 +109,7 @@ public class ReplyServiceImpl
             Long replyId,
             Integer userId) throws ReplyException {
         try {
-            checkId(User.class, userId, userService);
+            checkUserRole(checkId(User.class, userId, userService), false, false);
             Reply reply = checkId(Reply.class, replyId, this);
             String key = "suibe:mma:replyId:" + replyId;
             return ServiceUtil.like(userId, template, key, reply, this, userService);
@@ -171,6 +170,8 @@ public class ReplyServiceImpl
             checkUserInformation(getUser, user);
             Reply reply = checkId(Reply.class, replyId, this);
             replyDelete(reply, getUser, this, topicService, isAuthor);
+            changeScore(reply.getUserId(), -5 - reply.getReplyLikes(), userService);
+            deleteReplyKey(reply, template);
             return replyId;
         } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
@@ -185,8 +186,33 @@ public class ReplyServiceImpl
         try {
             User getUser = checkId(User.class, user.getId(), userService);
             checkUserInformation(getUser, user);
-            replyDeleteBatch(ids, getUser, this, topicService, isAuthor);
+            List<Reply> replyList = replyDeleteBatch(ids, getUser, this, topicService, isAuthor);
+            replyList.forEach(reply -> {
+                changeScore(reply.getUserId(), -5 - reply.getReplyLikes(), userService);
+                deleteReplyKey(reply, template);
+            });
             return ids;
+        } catch (RuntimeException e) {
+            throw new ReplyException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void deleteBatch(
+            List<Reply> topicReply,
+            HttpSession session) throws ReplyException {
+        try {
+            topicReply.forEach(reply -> {
+                reply.setUpdateTime(null);
+                session.setAttribute("replyId:" + reply.getReplyId(), null);
+            });
+            if (!removeBatchByIds(topicReply)) {
+                TopicEE.TOPIC_REMOVE_REPLY_FAILED.throwE();
+            }
+            topicReply.forEach(reply -> {
+                changeScore(reply.getUserId(), -5 - reply.getReplyLikes(), userService);
+                deleteReplyKey(reply, template);
+            });
         } catch (RuntimeException e) {
             throw new ReplyException(e.getMessage(), e);
         }

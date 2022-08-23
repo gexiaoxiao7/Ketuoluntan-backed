@@ -14,7 +14,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 
@@ -131,7 +133,7 @@ public class Topic
     @Override
     public Topic checkPrimaryKey(
             Long id,
-            IService<Topic> service) throws RuntimeException {
+            IService<Topic> service) throws TopicException {
         if (id == null) {
             TopicEE.TOPIC_ID_IS_NULL.throwE();
         }
@@ -140,5 +142,19 @@ public class Topic
             TopicEE.TOPIC_ID_IS_WRONG.throwE();
         }
         return topic;
+    }
+
+    @Override
+    public List<Topic> checkPrimaryKey(
+            List<Long> ids,
+            IService<Topic> service) throws TopicException {
+        if (ids == null) {
+            TopicEE.TOPIC_IDS_IS_NULL.throwE();
+        }
+        List<Topic> topics = service.listByIds(ids);
+        if (topics.isEmpty()) {
+            TopicEE.TOPIC_IDS_IS_WRONG.throwE();
+        }
+        return topics;
     }
 }

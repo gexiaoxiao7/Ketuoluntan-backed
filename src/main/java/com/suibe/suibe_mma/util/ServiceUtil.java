@@ -9,6 +9,9 @@ import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.enumeration.TopicEE;
+import com.suibe.suibe_mma.exception.ReplyException;
+import com.suibe.suibe_mma.exception.TopicException;
+import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
@@ -125,6 +128,17 @@ public class ServiceUtil {
         }
     }
 
+    public static <T extends Checkable<T, R>, R> List<T> checkId(
+            @NotNull Class<T> clazz,
+            List<R> ids,
+            IService<T> service) throws RuntimeException {
+        try {
+            return clazz.newInstance().checkPrimaryKey(ids, service);
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     /**
      * 根据flag与userId改变score值
      * @param flag 改变score的标志
@@ -205,14 +219,7 @@ public class ServiceUtil {
         if (!replyService.removeById(reply)) {
             ReplyEE.REPLY_REMOVE_FAILED.throwE();
         }
-        UpdateWrapper<Topic> wrapper = new UpdateWrapper<>();
-        wrapper
-                .eq("topicId", reply.getTopicId())
-                .setSql("updateTime = now()")
-                .setSql("replyNum = replyNum - 1");
-        if (!topicService.update(wrapper)) {
-            ReplyEE.REPLY_TOPIC_REPLYNUM_SUB_FAILED.throwE();
-        }
+        replyTopicHelp(reply.getTopicId(), 1L, topicService);
     }
 
     /**
@@ -222,23 +229,25 @@ public class ServiceUtil {
      * @param replyService 回复服务类
      * @param topicService 题目服务类
      * @param isAuthor 是否是作者自己删
+     * @return 回复列表
      * @throws RuntimeException 删除回复失败，相关题目replyNum更新失败，用户id不匹配，不为管理员
      */
-    public static void replyDeleteBatch(
-            List<Long> ids,
+    @NotNull
+    public static List<Reply> replyDeleteBatch(
+            @NotNull List<Long> ids,
             User user,
             @NotNull ReplyService replyService,
             TopicService topicService,
             boolean isAuthor) throws RuntimeException {
         checkUserRole(user, !isAuthor, false);
-        List<Reply> replies = replyService.listByIds(ids);
+        List<Reply> replies = checkId(Reply.class, ids, replyService);
         List<Long> topicIds = new ArrayList<>(replies.size());
         Map<String, Long> map = new HashMap<>();
         Integer userId = user.getId();
         replies.forEach(reply -> {
             checkReplyUserId(reply, userId, isAuthor);
             reply.setUpdateTime(null);
-            topicIds.add(reply.getReplyId());
+            topicIds.add(reply.getTopicId());
         });
         if (!replyService.removeBatchByIds(replies)) {
             ReplyEE.REPLY_REMOVE_FAILED.throwE();
@@ -250,16 +259,29 @@ public class ServiceUtil {
                 map.put("topicId:" + topicId, 1L);
             }
         });
-        map.forEach((key, value) -> {
-            UpdateWrapper<Topic> wrapper = new UpdateWrapper<>();
-            wrapper
-                    .eq("topicId", Long.parseLong(key.split(":")[1]))
-                    .setSql("updateTime = now()")
-                    .setSql("replyNum = replyNum - " + value);
-            if (!topicService.update(wrapper)) {
-                ReplyEE.REPLY_TOPIC_REPLYNUM_SUB_FAILED.throwE();
-            }
-        });
+        map.forEach((key, value) -> replyTopicHelp(Long.parseLong(key.split(":")[1]), value, topicService));
+        return replies;
+    }
+
+    /**
+     * 回复删除减少题目replyNum帮助方法
+     * @param topicId 题目id
+     * @param replyNum 回复数减少数
+     * @param topicService 题目服务类
+     * @throws ReplyException 题目replyNum更新失败
+     */
+    public static void replyTopicHelp(
+            Long topicId,
+            Long replyNum,
+            @NotNull TopicService topicService) throws ReplyException {
+        UpdateWrapper<Topic> wrapper = new UpdateWrapper<>();
+        wrapper
+                .eq("topicId", topicId)
+                .setSql("updateTime = now()")
+                .setSql("replyNum = replyNum - " + replyNum);
+        if (!topicService.update(wrapper)) {
+            ReplyEE.REPLY_TOPIC_REPLYNUM_SUB_FAILED.throwE();
+        }
     }
 
     /**
@@ -299,7 +321,7 @@ public class ServiceUtil {
             @NotNull TopicService topicService,
             boolean isAuthor) throws RuntimeException {
         checkUserRole(user, !isAuthor, false);
-        List<Topic> topics = topicService.listByIds(ids);
+        List<Topic> topics = checkId(Topic.class, ids, topicService);
         Integer userId = user.getId();
         topics.forEach(topic -> {
             checkTopicUserId(topic, userId, isAuthor);
@@ -309,6 +331,65 @@ public class ServiceUtil {
             TopicEE.TOPIC_REMOVE_FAILED.throwE();
         }
         return topics;
+    }
+
+    /**
+     * 题目改变用户score帮助方法
+     * @param userId 用户唯一标识
+     * @param score 改变分数值
+     * @param userService 用户服务类
+     * @throws UserException 改变用户score失败
+     */
+    public static void changeScore(
+            Integer userId,
+            Integer score,
+            @NotNull UserService userService) throws UserException {
+        userService.changeScore(userService.getById(userId), score);
+    }
+
+    /**
+     * 题目改变用户score帮助方法
+     * @param user 用户信息
+     * @param score 改变分数值
+     * @param userService 用户服务类
+     * @return 用户信息
+     * @throws UserException 改变用户score失败
+     */
+    public static User changeScore(
+            User user,
+            Integer score,
+            @NotNull UserService userService) throws UserException {
+        return userService.changeScore(user, score);
+    }
+
+    /**
+     * 回复点赞信息删除方法
+     * @param reply 回复信息
+     * @param template redis模板类
+     * @throws ReplyException 点赞信息更新失败
+     */
+    public static void deleteReplyKey(
+            @NotNull Reply reply,
+            @NotNull RedisTemplate<String, Object> template) throws ReplyException {
+        Boolean delete = template.delete("suibe:mma:replyId:" + reply.getReplyId());
+        if (delete == null || !delete) {
+            ReplyEE.REPLY_LIKE_UPDATE_FAILED.throwE();
+        }
+    }
+
+    /**
+     * 题目点赞信息删除方法
+     * @param topic 题目信息
+     * @param template redis模板类
+     * @throws TopicException 点赞信息更新失败
+     */
+    public static void deleteTopicKey(
+            @NotNull Topic topic,
+            @NotNull RedisTemplate<String, Object> template) throws TopicException {
+        Boolean delete = template.delete("suibe:mma:topicId:" + topic.getTopicId());
+        if (delete == null || !delete) {
+            TopicEE.TOPIC_LIKE_UPDATE_FAILED.throwE();
+        }
     }
 
 }

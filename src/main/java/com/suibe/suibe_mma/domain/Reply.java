@@ -14,7 +14,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 
@@ -135,5 +137,19 @@ public class Reply
             ReplyEE.REPLY_ID_IS_WRONG.throwE();
         }
         return reply;
+    }
+
+    @Override
+    public List<Reply> checkPrimaryKey(
+            List<Long> ids,
+            IService<Reply> service) throws ReplyException {
+        if (ids == null) {
+            ReplyEE.REPLY_IDS_IS_NULL.throwE();
+        }
+        List<Reply> replies = service.listByIds(ids);
+        if (replies.isEmpty()) {
+            ReplyEE.REPLY_IDS_IS_WRONG.throwE();
+        }
+        return replies;
     }
 }
