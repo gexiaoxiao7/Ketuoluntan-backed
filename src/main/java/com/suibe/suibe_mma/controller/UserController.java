@@ -286,11 +286,25 @@ public class UserController {
     }
 
     /**
-     * 获取所有用户信息
+     * 获取所有用户信息(包括封禁用户）
      * @return 用户信息列表
      */
     @PostMapping("/getAllUsers")
     public List<User> getAllUsers() {
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper
+                .orderByDesc("score")
+                .orderByAsc("createTime")
+                .ne("userRole", 2);
+        return userService.list(wrapper);
+    }
+
+    /**
+     * 获取所有用户排名列表
+     * @return 用户信息列表
+     */
+    @PostMapping("/rankings")
+    public List<User> userRankings() {
         QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper
                 .orderByDesc("score")
