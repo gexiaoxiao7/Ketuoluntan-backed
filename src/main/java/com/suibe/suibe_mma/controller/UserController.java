@@ -294,8 +294,7 @@ public class UserController {
         QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper
                 .orderByDesc("score")
-                .orderByAsc("createTime")
-                .ne("userRole", 2);
+                .orderByAsc("createTime");
         return userService.list(wrapper);
     }
 
