@@ -1,6 +1,7 @@
 package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.suibe.suibe_mma.SuibeMmaApplication;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.SearchTitleRequest;
@@ -10,15 +11,12 @@ import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static com.suibe.suibe_mma.util.ControllerUtil.*;
 import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
@@ -43,11 +41,6 @@ public class TopicController {
     private ReplyService replyService;
 
     /**
-     * 定义一个锁
-     */
-    private final Lock lock = new ReentrantLock();
-
-    /**
      * 上传题目控制方法
      * @param topicUploadRequest 题目上传实例
      * @param request 请求域对象
@@ -58,16 +51,18 @@ public class TopicController {
             @RequestBody TopicUploadRequest topicUploadRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(topicUploadRequest);
-            getCurrent(session);
-            session.setAttribute(
-                    UserService.USER_LOGIN_STATE,
-                    topicService.upload(topicUploadRequest)
-            );
-            return "上传成功";
-        } catch (RuntimeException e) {
-            return e.getMessage();
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(topicUploadRequest);
+                getCurrent(session);
+                session.setAttribute(
+                        UserService.USER_LOGIN_STATE,
+                        topicService.upload(topicUploadRequest)
+                );
+                return "上传成功";
+            } catch (RuntimeException e) {
+                return e.getMessage();
+            }
         }
     }
 
@@ -82,23 +77,22 @@ public class TopicController {
             @RequestBody Topic topic,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(topic);
-            Integer id = getCurrent(session).getId();
-            lock.lock();
-            Topic topic_plus = topicService.like(topic.getTopicId(), id);
-            session.setAttribute("errMsg", null);
-            if (topicService.topicLikeHelp(topic_plus, id) == 1) {
-                session.setAttribute("topicId:" + topic_plus.getTopicId(), 1);
-            } else {
-                session.setAttribute("topicId:" + topic_plus.getTopicId(), null);
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(topic);
+                Integer id = getCurrent(session).getId();
+                Topic topic_plus = topicService.like(topic.getTopicId(), id);
+                session.setAttribute("errMsg", null);
+                if (topicService.topicLikeHelp(topic_plus, id) == 1) {
+                    session.setAttribute("topicId:" + topic_plus.getTopicId(), 1);
+                } else {
+                    session.setAttribute("topicId:" + topic_plus.getTopicId(), null);
+                }
+                return topic_plus;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
             }
-            return topic_plus;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -204,15 +198,17 @@ public class TopicController {
             @RequestBody TopicIdRequest topicIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(topicIdRequest);
-            Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session), true);
-            removeReplyByTopic(session, topic, replyService);
-            session.setAttribute("errMsg", null);
-            return topic.getTopicId();
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(topicIdRequest);
+                Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session), true);
+                removeReplyByTopic(session, topic, replyService);
+                session.setAttribute("errMsg", null);
+                return topic.getTopicId();
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
         }
     }
 
@@ -227,15 +223,17 @@ public class TopicController {
             @RequestBody List<Long> ids,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(ids);
-            List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session), true);
-            topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
-            session.setAttribute("errMsg", null);
-            return ids;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(ids);
+                List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session), true);
+                topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
+                session.setAttribute("errMsg", null);
+                return ids;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
         }
     }
 
@@ -250,15 +248,17 @@ public class TopicController {
             @RequestBody TopicIdRequest topicIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(topicIdRequest);
-            Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session), false);
-            removeReplyByTopic(session, topic, replyService);
-            session.setAttribute("errMsg", null);
-            return topic.getTopicId();
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(topicIdRequest);
+                Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session), false);
+                removeReplyByTopic(session, topic, replyService);
+                session.setAttribute("errMsg", null);
+                return topic.getTopicId();
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
         }
     }
 
@@ -273,15 +273,17 @@ public class TopicController {
             @RequestBody List<Long> ids,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(ids);
-            List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session), false);
-            topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
-            session.setAttribute("errMsg", null);
-            return ids;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(ids);
+                List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session), false);
+                topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
+                session.setAttribute("errMsg", null);
+                return ids;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
         }
     }
 

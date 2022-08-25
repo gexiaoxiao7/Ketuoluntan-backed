@@ -9,6 +9,7 @@ import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
+import com.suibe.suibe_mma.util.ControllerUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -33,12 +35,6 @@ class SuibeMmaApplicationTests {
 
     @Autowired
     private TopicService topicService;
-
-    @Autowired
-    private ReplyService replyService;
-
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     void contextLoads() {
@@ -103,14 +99,6 @@ class SuibeMmaApplicationTests {
         integers.add(5);
         List<User> users = userService.listByIds(integers);
         users.forEach(System.out::println);
-    }
-
-    @Test
-    void test8() {
-        String message = "123456";
-        SearchTitleRequest searchTitleRequest = new SearchTitleRequest();
-        searchTitleRequest.setSearchTitle(message);
-        topicService.searchTitle(searchTitleRequest).forEach(System.out::println);
     }
 
 }

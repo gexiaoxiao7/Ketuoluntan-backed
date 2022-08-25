@@ -1,18 +1,24 @@
 package com.suibe.suibe_mma.util;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.suibe.suibe_mma.SuibeMmaApplication;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.UserIdRequest;
+import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.servlet.http.HttpSession;
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 
@@ -33,12 +39,24 @@ public class ControllerUtil {
      */
     @NotNull
     public static User getCurrent(@NotNull HttpSession session) throws RuntimeException {
+        return getCurrent(session, false, false);
+    }
+
+    /**
+     * 获取当前对象并做验证是否为null
+     * @param session session域对象
+     * @param isManager 是否是管理员
+     * @param isCommon 是否是普通成员
+     * @return 用户信息
+     * @throws RuntimeException 无用户登录，不是管理员，不是普通用户
+     */
+    public static User getCurrent(@NotNull HttpSession session, boolean isManager, boolean isCommon) throws RuntimeException {
         Object o = session.getAttribute(UserService.USER_LOGIN_STATE);
         if (o == null) {
             throw new RuntimeException("当前用户未登录");
         }
         User user = (User) o;
-        checkUserRole(user, false, false);
+        checkUserRole(user, isManager, isCommon);
         return user;
     }
 
@@ -103,6 +121,30 @@ public class ControllerUtil {
     public static void requestFail(Collection<?> collection) throws RuntimeException {
         if (collection == null) {
             throw new RuntimeException("请求失败");
+        }
+    }
+
+    /**
+     * 每隔一个月更新月积分
+     * @param template redis模板类
+     * @param userService 用户服务类
+     * @throws RuntimeException 月积分更新失败
+     */
+    public static void monthlyChange(
+            @NotNull RedisTemplate<String, Object> template,
+            UserService userService) throws RuntimeException {
+        Calendar c = Calendar.getInstance();
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH) + 1;
+        String key = "suibe:mma:" + year + ":" + month;
+        Boolean hasKey = template.hasKey(key);
+        if (hasKey == null || !hasKey) {
+            synchronized (SuibeMmaApplication.class) {
+                template
+                        .opsForValue()
+                        .set(key, year + ":" + month, c.getActualMaximum(Calendar.DAY_OF_MONTH), TimeUnit.DAYS);
+                userService.monthScoreReset();
+            }
         }
     }
 }

@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
-import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.*;
 
 /**
@@ -82,11 +81,9 @@ public class UserServiceImpl
     @Override
     public User checkCurrentUser(@NotNull User currentUser) throws UserException {
         try {
-            Integer userId = currentUser.getId();
-            User getUser = checkId(User.class, userId, this);
-            checkUserRole(getUser, false, false);
+            User getUser = userHelp(currentUser.getId(), this);
             checkUserInformation(getUser, currentUser);
-            return currentUser;
+            return getUser;
         }  catch (RuntimeException e) {
             throw new UserException(e.getMessage(), e);
         }
@@ -96,9 +93,10 @@ public class UserServiceImpl
     public User updateUserInfo(@NotNull User user) throws UserException {
         try {
             Integer id = user.getId();
-            checkUserRole(checkId(User.class, id, this), false, false);
-            user.setUpdateTime(null);
-            if (!updateById(user)) {
+            User getUser = userHelp(id, this);
+            checkUserInformation(getUser, user);
+            getUser.setUpdateTime(null);
+            if (!updateById(getUser)) {
                 UserEE.USER_INFO_UPDATE_FAILED.throwE();
             }
             return getById(id);
@@ -113,17 +111,16 @@ public class UserServiceImpl
             Integer score) throws UserException {
         try {
             Integer id = user.getId();
-            User getUser = checkId(User.class, id, this);
+            User getUser = userHelp(id, this);
             checkUserInformation(getUser, user);
+            User user_plus = changeMonthScore(getUser, score);
             int score_plus = getUser.getScore() + score;
             if (score_plus < 0) {
                 score_plus = 0;
             }
-            getUser.setScore(score_plus);
-            getUser.setUpdateTime(null);
-            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id", id);
-            if (!update(getUser, wrapper)) {
+            user_plus.setScore(score_plus);
+            user_plus.setUpdateTime(null);
+            if (!updateById(getUser)) {
                 UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }
             return getById(id);
@@ -153,9 +150,7 @@ public class UserServiceImpl
             if (!newPassword.equals(newCheckPassword)) {
                 UserEE.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwE();
             }
-            User user = checkId(User.class, id, this);
-            checkUserRole(user, false, false);
-            checkUserInformation(user, currentUser);
+            checkUserInformation(currentUser, this, false);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .set("userPassword", encrypt(newPassword))
@@ -172,35 +167,12 @@ public class UserServiceImpl
     }
 
     @Override
-    public void managerChangeScore(
-            User user,
-            Integer score) throws UserException {
-        try {
-            Integer id = user.getId();
-            int score_plus = score + user.getScore();
-            if (score_plus < 0) {
-                score_plus = 0;
-            }
-            user.setScore(score_plus);
-            user.setUpdateTime(null);
-            UpdateWrapper<User> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id", id);
-            if (!update(user, wrapper)) {
-                UserEE.USER_SCORE_UPDATE_FAILED.throwE();
-            }
-        } catch (RuntimeException e) {
-            throw new UserException(e.getMessage(), e);
-        }
-    }
-
-    @Override
     public void sealUser(
             UserIdRequest userIdRequest,
             User currentUser) throws UserException {
         try {
-            User user = checkId(User.class, userIdRequest.getUserId(), this);
-            checkUserInformation(checkId(User.class, currentUser.getId(), this), currentUser);
-            checkUserRole(currentUser, true, false);
+            User user = userHelp(userIdRequest.getUserId(), this);
+            checkUserInformation(currentUser, this, false, true);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .eq("id", user.getId())
@@ -219,12 +191,8 @@ public class UserServiceImpl
             UserIdRequest userIdRequest,
             User currentUser) throws UserException {
         try {
-            User user = checkId(User.class, userIdRequest.getUserId(), this);
-            if (user.getUserRole() != 2) {
-                UserEE.USER_NOT_SEAL.throwE();
-            }
-            checkUserInformation(checkId(User.class, currentUser.getId(), this), currentUser);
-            checkUserRole(currentUser, true, false);
+            User user = userHelp(userIdRequest.getUserId(), this, true);
+            checkUserInformation(currentUser, this, false, true);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .eq("id", user.getId())
@@ -254,6 +222,33 @@ public class UserServiceImpl
         if (!updateById(user)) {
             UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
         }
+    }
+
+    @Override
+    public void monthScoreReset() throws UserException {
+        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+        wrapper.set("monthScore", 0);
+        if (!update(wrapper)) {
+            UserEE.USER_SCORE_UPDATE_FAILED.throwE();
+        }
+    }
+
+    /**
+     * 更新用户月积分
+     * @param user 用户信息
+     * @param mouthScore 更新月积分
+     * @return 更新后用户信息
+     * @throws UserException 用户积分更新失败
+     */
+    private User changeMonthScore(
+            @NotNull User user,
+            Integer mouthScore) throws UserException {
+        user.setMonthScore(user.getMonthScore() + mouthScore);
+        user.setUpdateTime(null);
+        if (!updateById(user)) {
+            UserEE.USER_SCORE_UPDATE_FAILED.throwE();
+        }
+        return getById(user.getId());
     }
 
 }

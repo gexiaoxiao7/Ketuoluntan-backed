@@ -9,6 +9,7 @@ import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.enumeration.TopicEE;
+import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.exception.UserException;
@@ -371,9 +372,13 @@ public class ServiceUtil {
     public static void deleteReplyKey(
             @NotNull Reply reply,
             @NotNull RedisTemplate<String, Object> template) throws ReplyException {
-        Boolean delete = template.delete("suibe:mma:replyId:" + reply.getReplyId());
-        if (delete == null || !delete) {
-            ReplyEE.REPLY_LIKE_UPDATE_FAILED.throwE();
+        String key = "suibe:mma:replyId:" + reply.getReplyId();
+        Boolean hasKey = template.hasKey(key);
+        if (hasKey != null && hasKey) {
+            Boolean delete = template.delete(key);
+            if (delete == null || !delete) {
+                ReplyEE.REPLY_LIKE_UPDATE_FAILED.throwE();
+            }
         }
     }
 
@@ -386,10 +391,59 @@ public class ServiceUtil {
     public static void deleteTopicKey(
             @NotNull Topic topic,
             @NotNull RedisTemplate<String, Object> template) throws TopicException {
-        Boolean delete = template.delete("suibe:mma:topicId:" + topic.getTopicId());
-        if (delete == null || !delete) {
-            TopicEE.TOPIC_LIKE_UPDATE_FAILED.throwE();
+        String key = "suibe:mma:topicId:" + topic.getTopicId();
+        Boolean hasKey = template.hasKey(key);
+        if (hasKey != null && hasKey) {
+            Boolean delete = template.delete(key);
+            if (delete == null || !delete) {
+                TopicEE.TOPIC_LIKE_UPDATE_FAILED.throwE();
+            }
         }
+    }
+
+    /**
+     * 简化用户检查方法
+     * @param id 用户唯一标识
+     * @param userService 用户服务类
+     * @param isManager 是否是管理员
+     * @param isCommon 是否是普通用户
+     * @return 用户信息
+     * @throws RuntimeException id为空或无效，被封，不是管理员，不是普通用户
+     */
+    public static User userHelp(Integer id, UserService userService, boolean isManager, boolean isCommon) throws RuntimeException{
+        User user = checkId(User.class, id, userService);
+        checkUserRole(user, isManager, isCommon);
+        return user;
+    }
+
+    /**
+     * 简化用户检查方法
+     * @param id 用户唯一标识
+     * @param userService 用户服务类
+     * @return 用户信息
+     * @throws RuntimeException id为空或无效，被封
+     */
+    public static User userHelp(Integer id, UserService userService) throws RuntimeException {
+        return userHelp(id, userService, false, false);
+    }
+
+    /**
+     * 简化用户检查方法
+     * @param id 用户唯一标识
+     * @param userService 用户服务类
+     * @param isSeal 是否被封
+     * @return 用户信息
+     * @throws RuntimeException 用户未被封，被封，id无效或为空
+     */
+    public static User userHelp(Integer id, UserService userService, boolean isSeal) throws RuntimeException {
+        if (!isSeal) {
+            return userHelp(id, userService);
+        }
+        User user = checkId(User.class, id, userService);
+        if (user.getUserRole() != 2) {
+            UserEE.USER_NOT_SEAL.throwE();
+        }
+        return user;
     }
 
 }

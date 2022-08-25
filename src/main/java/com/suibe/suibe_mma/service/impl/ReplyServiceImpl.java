@@ -27,7 +27,6 @@ import javax.servlet.http.HttpSession;
 import java.util.List;
 
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
-import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.*;
 
 /**
@@ -64,8 +63,7 @@ public class ReplyServiceImpl
         Long topicId = replyWriteRequest.getTopicId();
         String replyContent = replyWriteRequest.getReplyContent();
         try {
-            User getUser = checkId(User.class, userId, userService);
-            checkUserRole(getUser, false, false);
+            User getUser = userHelp(userId, userService);
             checkUserInformation(getUser, currentUser);
             checkId(Topic.class, topicId, topicService);
             if (replyContent == null || "".equals(replyContent)) {
@@ -109,7 +107,7 @@ public class ReplyServiceImpl
             Long replyId,
             Integer userId) throws ReplyException {
         try {
-            checkUserRole(checkId(User.class, userId, userService), false, false);
+            userHelp(userId, userService);
             Reply reply = checkId(Reply.class, replyId, this);
             String key = "suibe:mma:replyId:" + replyId;
             return ServiceUtil.like(userId, template, key, reply, this, userService);

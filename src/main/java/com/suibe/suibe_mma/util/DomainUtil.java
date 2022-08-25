@@ -9,7 +9,10 @@ import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.exception.UserException;
+import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
+
+import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 
 /**
  * domain类帮助类
@@ -79,6 +82,44 @@ public class DomainUtil {
         if (!getUser.equals(currentUser)) {
             UserEE.USER_INFORMATION_WRONG.throwE();
         }
+    }
+
+    /**
+     * 检查用户信息是否匹配
+     * @param user 用户信息
+     * @param userService 用户服务类
+     * @param isUserSeal 用户是否被封标志
+     * @param isManager 是否是管理员
+     * @throws RuntimeException 用户被封，用户信息不匹配，id无效或为空，用户不是管理员，不是普通用户
+     */
+    public static void checkUserInformation(
+            @NotNull User user,
+            UserService userService,
+            boolean isUserSeal,
+            boolean isManager) throws RuntimeException {
+        User getUser = checkId(User.class, user.getId(), userService);
+        if (!isUserSeal) {
+            checkUserRole(getUser, isManager, !isManager);
+        } else {
+            if (getUser.getUserRole() != 2) {
+                UserEE.USER_NOT_SEAL.throwE();
+            }
+        }
+        checkUserInformation(getUser, user);
+    }
+
+    /**
+     * 检查用户信息是否匹配
+     * @param user 用户信息
+     * @param userService 用户服务类
+     * @param isUserSeal 用户是否被封标志
+     * @throws RuntimeException 用户被封，用户信息不匹配，id无效或为空
+     */
+    public static void checkUserInformation(
+            @NotNull User user,
+            UserService userService,
+            boolean isUserSeal) throws RuntimeException {
+        checkUserInformation(user, userService, isUserSeal, false);
     }
 
     /**

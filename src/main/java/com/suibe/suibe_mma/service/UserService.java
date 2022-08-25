@@ -55,7 +55,7 @@ public interface UserService
     User updateUserInfo(User user) throws UserException;
 
     /**
-     * 根据用户id，增加用户积分
+     * 根据用户id，改变用户积分
      * @param user 用户信息
      * @param score 用户积分
      * @return 更新后用户信息
@@ -75,16 +75,6 @@ public interface UserService
     User changePassword(
             UserChangePasswordRequest request,
             User currentUser) throws UserException;
-
-    /**
-     * 修改积分
-     * @param user 用户信息
-     * @param score 改变积分
-     * @throws UserException 改变积分失败
-     */
-    void managerChangeScore(
-            User user,
-            Integer score) throws UserException;
 
     /**
      * 封号用户
@@ -119,4 +109,10 @@ public interface UserService
      * @throws UserException 修改失败
      */
     void recaptureManager(User user) throws UserException;
+
+    /**
+     * 月积分重置
+     * @throws UserException 月积分更新失败
+     */
+    void monthScoreReset() throws UserException;
 }

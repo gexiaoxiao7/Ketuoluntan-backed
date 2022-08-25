@@ -24,7 +24,6 @@ import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.*;
 
 /**
@@ -56,8 +55,7 @@ public class TopicServiceImpl
             if (topicTitle == null || "".equals(topicTitle)) {
                 TopicEE.TOPIC_TITLE_IS_SPACE.throwE();
             }
-            User user = checkId(User.class, userId, userService);
-            checkUserRole(user, false, false);
+            User user = userHelp(userId, userService);
             Topic topic = new Topic();
             topic.setUserId(userId);
             topic.setTopicTitle(topicTitle);
@@ -76,7 +74,7 @@ public class TopicServiceImpl
             Long topicId,
             Integer id) throws TopicException {
         try {
-            checkUserRole(checkId(User.class, id, userService), false, false);
+            userHelp(id, userService);
             Topic topic = checkId(Topic.class, topicId, this);
             String key = "suibe:mma:topicId:" + topicId;
             return ServiceUtil.like(id, template, key, topic, this, userService);

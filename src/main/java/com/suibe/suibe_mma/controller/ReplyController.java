@@ -1,5 +1,6 @@
 package com.suibe.suibe_mma.controller;
 
+import com.suibe.suibe_mma.SuibeMmaApplication;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
@@ -14,8 +15,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static com.suibe.suibe_mma.util.ControllerUtil.getCurrent;
 import static com.suibe.suibe_mma.util.ControllerUtil.requestFail;
@@ -34,11 +33,6 @@ public class ReplyController {
     private ReplyService replyService;
 
     /**
-     * 锁
-     */
-    private final Lock lock = new ReentrantLock();
-
-    /**
      * 写回复
      * @param replyWriteRequest 回复请求对象
      * @param request 请求域对象
@@ -49,16 +43,18 @@ public class ReplyController {
             @RequestBody ReplyWriteRequest replyWriteRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(replyWriteRequest);
-            User current = getCurrent(session);
-            session.setAttribute(
-                    UserService.USER_LOGIN_STATE,
-                    replyService.writeReply(replyWriteRequest, current)
-            );
-            return "回复成功";
-        } catch (RuntimeException e) {
-            return e.getMessage();
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(replyWriteRequest);
+                User current = getCurrent(session);
+                session.setAttribute(
+                        UserService.USER_LOGIN_STATE,
+                        replyService.writeReply(replyWriteRequest, current)
+                );
+                return "回复成功";
+            } catch (RuntimeException e) {
+                return e.getMessage();
+            }
         }
     }
 
@@ -100,24 +96,23 @@ public class ReplyController {
             @RequestBody Reply reply,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(reply);
-            lock.lock();
-            Integer id = getCurrent(session).getId();
-            Reply reply_plus = replyService.like(reply.getReplyId(), id);
-            session.setAttribute("errMsg", null);
-            Integer integer = replyService.replyLikeHelp(reply_plus, id);
-            if (integer == 1) {
-                session.setAttribute("replyId:" + reply_plus.getReplyId(), 1);
-            } else {
-                session.setAttribute("replyId:" + reply_plus.getReplyId(), null);
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(reply);
+                Integer id = getCurrent(session).getId();
+                Reply reply_plus = replyService.like(reply.getReplyId(), id);
+                session.setAttribute("errMsg", null);
+                Integer integer = replyService.replyLikeHelp(reply_plus, id);
+                if (integer == 1) {
+                    session.setAttribute("replyId:" + reply_plus.getReplyId(), 1);
+                } else {
+                    session.setAttribute("replyId:" + reply_plus.getReplyId(), null);
+                }
+                return reply_plus;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
             }
-            return reply_plus;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -185,15 +180,17 @@ public class ReplyController {
             @RequestBody ReplyIdRequest replyIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(replyIdRequest);
-            Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session), true);
-            session.setAttribute("replyId:" + replyId, null);
-            session.setAttribute("errMsg", null);
-            return replyId;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(replyIdRequest);
+                Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session), true);
+                session.setAttribute("replyId:" + replyId, null);
+                session.setAttribute("errMsg", null);
+                return replyId;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
         }
     }
 
@@ -208,16 +205,18 @@ public class ReplyController {
             @RequestBody List<Long> ids,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(ids);
-            replyService
-                    .deleteBatchByAuthorOrNot(ids, getCurrent(session), true)
-                    .forEach(replyId -> session.setAttribute("replyId:" + replyId, null));
-            session.setAttribute("errMsg", null);
-            return ids;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(ids);
+                replyService
+                        .deleteBatchByAuthorOrNot(ids, getCurrent(session), true)
+                        .forEach(replyId -> session.setAttribute("replyId:" + replyId, null));
+                session.setAttribute("errMsg", null);
+                return ids;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
         }
     }
 
@@ -232,15 +231,17 @@ public class ReplyController {
             @RequestBody ReplyIdRequest replyIdRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(replyIdRequest);
-            Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session), false);
-            session.setAttribute("replyId:" + replyId, null);
-            session.setAttribute("errMsg", null);
-            return replyId;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(replyIdRequest);
+                Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session), false);
+                session.setAttribute("replyId:" + replyId, null);
+                session.setAttribute("errMsg", null);
+                return replyId;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
         }
     }
 
@@ -255,16 +256,18 @@ public class ReplyController {
             @RequestBody List<Long> ids,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(ids);
-            replyService
-                    .deleteBatchByAuthorOrNot(ids, getCurrent(session), false)
-                    .forEach(replyId -> session.setAttribute("replyId:" + replyId, null));
-            session.setAttribute("errMsg", null);
-            return ids;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(ids);
+                replyService
+                        .deleteBatchByAuthorOrNot(ids, getCurrent(session), false)
+                        .forEach(replyId -> session.setAttribute("replyId:" + replyId, null));
+                session.setAttribute("errMsg", null);
+                return ids;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
         }
     }
 

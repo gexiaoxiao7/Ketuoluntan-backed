@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -17,7 +16,7 @@ import java.util.List;
  * 用户信息类
  */
 @Data
-@EqualsAndHashCode(exclude = {"score", "updateTime"})
+@EqualsAndHashCode(exclude = {"score", "updateTime", "monthScore"})
 @TableName("mma_user")
 public class User
         implements Serializable, Checkable<User, Integer> {
@@ -77,6 +76,12 @@ public class User
      * 用户积分
      */
     private Integer score;
+
+    /**
+     * 用户月积分
+     */
+    @TableField("monthScore")
+    private Integer monthScore;
 
     /**
      * 自我介绍

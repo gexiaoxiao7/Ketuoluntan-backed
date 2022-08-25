@@ -1,10 +1,12 @@
 package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.suibe.suibe_mma.SuibeMmaApplication;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.*;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -15,7 +17,7 @@ import java.util.List;
 
 import static com.suibe.suibe_mma.util.ControllerUtil.*;
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
-import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
+import static com.suibe.suibe_mma.util.ServiceUtil.userHelp;
 
 /**
  * 用户相关操作控制类
@@ -28,6 +30,12 @@ public class UserController {
      */
     @Resource
     private UserService userService;
+
+    /**
+     * 注入redisTemplate
+     */
+    @Resource
+    private RedisTemplate<String, Object> template;
 
     /**
      * 用户注册
@@ -61,6 +69,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userLoginRequest);
+            monthlyChange(template, userService);
             User user = userService.login(userLoginRequest);
             checkUserRole(user, false, false);
             session.setAttribute(userService.USER_LOGIN_STATE, user);
@@ -105,8 +114,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userIdRequest);
-            User user = checkId(User.class, userIdRequest.getUserId(), userService);
-            checkUserRole(user, false, false);
+            User user = userHelp(userIdRequest.getUserId(), userService, false, false);
             session.setAttribute("errMsg", null);
             return user;
         } catch (RuntimeException e) {
@@ -131,6 +139,10 @@ public class UserController {
             User originUser = getCurrent(session);
             if (originUser.equals(user)) {
                 throw new RuntimeException("用户信息无变动");
+            }
+            if (!originUser.getScore().equals(user.getScore()) ||
+                    !originUser.getMonthScore().equals(user.getMonthScore())) {
+                throw new RuntimeException("该功能不提供修改积分需求");
             }
             if (!originUser.getUserRole().equals(user.getUserRole())) {
                 throw new RuntimeException("该功能不提供修改用户角色需求");
@@ -242,20 +254,21 @@ public class UserController {
             @RequestBody ChangeScoreRequest changeScoreRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
-        try {
-            requestFail(changeScoreRequest);
-            User current = getCurrent(session);
-            checkUserRole(current, true, false);
-            Integer id = changeScoreRequest.getId();
-            if (current.getId().equals(id)) {
-                throw new RuntimeException("不能为自己改变分数");
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(changeScoreRequest);
+                User current = getCurrent(session, true, false);
+                Integer id = changeScoreRequest.getId();
+                if (current.getId().equals(id)) {
+                    throw new RuntimeException("不能为自己改变分数");
+                }
+                userService.changeScore(userHelp(id, userService), changeScoreRequest.getScore());
+                session.setAttribute("errMsg", null);
+                return id;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
             }
-            userService.managerChangeScore(checkId(User.class, id, userService), changeScoreRequest.getScore());
-            session.setAttribute("errMsg", null);
-            return id;
-        } catch (RuntimeException e) {
-            session.setAttribute("errMsg", e.getMessage());
-            return null;
         }
     }
 
@@ -272,10 +285,8 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userIdRequest);
-            User current = getCurrent(session);
-            checkUserRole(current, true, false);
-            User user = checkId(User.class, userIdRequest.getUserId(), userService);
-            checkUserRole(user, false, true);
+            getCurrent(session, true, false);
+            User user = userHelp(userIdRequest.getUserId(), userService);
             userService.giveManager(user);
             session.setAttribute("errMsg", null);
             return user.getId();
@@ -286,17 +297,49 @@ public class UserController {
     }
 
     /**
-     * 获取所有用户信息
+     * 总排名
+     * @param request 请求域对象
      * @return 用户信息列表
      */
     @PostMapping("/getAllUsers")
-    public List<User> getAllUsers() {
-        QueryWrapper<User> wrapper = new QueryWrapper<>();
-        wrapper
-                .orderByDesc("score")
-                .orderByAsc("createTime")
-                .ne("userRole", 2);
-        return userService.list(wrapper);
+    public List<User> getAllUsers(@NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            getCurrent(session);
+            QueryWrapper<User> wrapper = new QueryWrapper<>();
+            wrapper
+                    .orderByDesc("score")
+                    .orderByAsc("createTime")
+                    .ne("userRole", 2);
+            session.setAttribute("errMsg", null);
+            return userService.list(wrapper);
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 月排名
+     * @param request 请求域对象
+     * @return 用户信息列表
+     */
+    @PostMapping("/getAllUsersByMouth")
+    public List<User> getAllUsersByMouth(@NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            getCurrent(session);
+            QueryWrapper<User> wrapper = new QueryWrapper<>();
+            wrapper
+                    .orderByDesc("mouthScore")
+                    .orderByAsc("createTime")
+                    .ne("userRole", 2);
+            session.setAttribute("errMsg", null);
+            return userService.list(wrapper);
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -312,10 +355,8 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userIdRequest);
-            User current = getCurrent(session);
-            checkUserRole(current, true, false);
-            User user = checkId(User.class, userIdRequest.getUserId(), userService);
-            checkUserRole(user, true, false);
+            getCurrent(session, true, false);
+            User user = userHelp(userIdRequest.getUserId(), userService, true, false);
             userService.recaptureManager(user);
             session.setAttribute("errMsg", null);
             return user.getId();
