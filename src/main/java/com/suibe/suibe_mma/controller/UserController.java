@@ -309,8 +309,7 @@ public class UserController {
             QueryWrapper<User> wrapper = new QueryWrapper<>();
             wrapper
                     .orderByDesc("score")
-                    .orderByAsc("createTime")
-                    .ne("userRole", 2);
+                    .orderByAsc("createTime");
             session.setAttribute("errMsg", null);
             return userService.list(wrapper);
         } catch (RuntimeException e) {
@@ -332,8 +331,7 @@ public class UserController {
             QueryWrapper<User> wrapper = new QueryWrapper<>();
             wrapper
                     .orderByDesc("mouthScore")
-                    .orderByAsc("createTime")
-                    .ne("userRole", 2);
+                    .orderByAsc("createTime");
             session.setAttribute("errMsg", null);
             return userService.list(wrapper);
         } catch (RuntimeException e) {
