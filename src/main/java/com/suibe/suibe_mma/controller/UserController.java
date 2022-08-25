@@ -323,14 +323,14 @@ public class UserController {
      * @param request 请求域对象
      * @return 用户信息列表
      */
-    @PostMapping("/getAllUsersByMouth")
-    public List<User> getAllUsersByMouth(@NotNull HttpServletRequest request) {
+    @PostMapping("/getAllUsersByMonth")
+    public List<User> getAllUsersByMonth(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
             getCurrent(session);
             QueryWrapper<User> wrapper = new QueryWrapper<>();
             wrapper
-                    .orderByDesc("mouthScore")
+                    .orderByDesc("monthScore")
                     .orderByAsc("createTime");
             session.setAttribute("errMsg", null);
             return userService.list(wrapper);
