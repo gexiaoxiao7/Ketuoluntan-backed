@@ -33,6 +33,12 @@ public class ReplyController {
     private ReplyService replyService;
 
     /**
+     * 注入userService
+     */
+    @Resource
+    private UserService userService;
+
+    /**
      * 写回复
      * @param replyWriteRequest 回复请求对象
      * @param request 请求域对象
@@ -46,7 +52,7 @@ public class ReplyController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(replyWriteRequest);
-                User current = getCurrent(session);
+                User current = getCurrent(session, userService);
                 session.setAttribute(
                         UserService.USER_LOGIN_STATE,
                         replyService.writeReply(replyWriteRequest, current)
@@ -67,7 +73,7 @@ public class ReplyController {
     public List<Reply> getMyReply(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            Integer id = getCurrent(session).getId();
+            Integer id = getCurrent(session, userService).getId();
             List<Reply> list = replyService.getAllReplyByUserId(id);
             list.forEach(
                     reply -> {
@@ -99,7 +105,7 @@ public class ReplyController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(reply);
-                Integer id = getCurrent(session).getId();
+                Integer id = getCurrent(session, userService).getId();
                 Reply reply_plus = replyService.like(reply.getReplyId(), id);
                 session.setAttribute("errMsg", null);
                 Integer integer = replyService.replyLikeHelp(reply_plus, id);
@@ -129,7 +135,7 @@ public class ReplyController {
         HttpSession session = request.getSession();
         try {
             requestFail(topic);
-            Integer id = getCurrent(session).getId();
+            Integer id = getCurrent(session, userService).getId();
             List<Reply> replies = replyService.getTopicReply(topic);
             replies.forEach(
                     reply -> {
@@ -183,7 +189,7 @@ public class ReplyController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(replyIdRequest);
-                Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session), true);
+                Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session, userService), true);
                 session.setAttribute("replyId:" + replyId, null);
                 session.setAttribute("errMsg", null);
                 return replyId;
@@ -209,7 +215,7 @@ public class ReplyController {
             try {
                 requestFail(ids);
                 replyService
-                        .deleteBatchByAuthorOrNot(ids, getCurrent(session), true)
+                        .deleteBatchByAuthorOrNot(ids, getCurrent(session, userService), true)
                         .forEach(replyId -> session.setAttribute("replyId:" + replyId, null));
                 session.setAttribute("errMsg", null);
                 return ids;
@@ -234,7 +240,7 @@ public class ReplyController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(replyIdRequest);
-                Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session), false);
+                Long replyId = replyService.deleteByAuthorOrNot(replyIdRequest, getCurrent(session, userService), false);
                 session.setAttribute("replyId:" + replyId, null);
                 session.setAttribute("errMsg", null);
                 return replyId;
@@ -260,7 +266,7 @@ public class ReplyController {
             try {
                 requestFail(ids);
                 replyService
-                        .deleteBatchByAuthorOrNot(ids, getCurrent(session), false)
+                        .deleteBatchByAuthorOrNot(ids, getCurrent(session, userService), false)
                         .forEach(replyId -> session.setAttribute("replyId:" + replyId, null));
                 session.setAttribute("errMsg", null);
                 return ids;

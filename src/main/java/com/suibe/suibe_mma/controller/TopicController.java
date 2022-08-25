@@ -41,6 +41,12 @@ public class TopicController {
     private ReplyService replyService;
 
     /**
+     * 注入userService
+     */
+    @Resource
+    private UserService userService;
+
+    /**
      * 上传题目控制方法
      * @param topicUploadRequest 题目上传实例
      * @param request 请求域对象
@@ -54,7 +60,7 @@ public class TopicController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(topicUploadRequest);
-                getCurrent(session);
+                getCurrent(session, userService);
                 session.setAttribute(
                         UserService.USER_LOGIN_STATE,
                         topicService.upload(topicUploadRequest)
@@ -80,7 +86,7 @@ public class TopicController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(topic);
-                Integer id = getCurrent(session).getId();
+                Integer id = getCurrent(session, userService).getId();
                 Topic topic_plus = topicService.like(topic.getTopicId(), id);
                 session.setAttribute("errMsg", null);
                 if (topicService.topicLikeHelp(topic_plus, id) == 1) {
@@ -108,7 +114,7 @@ public class TopicController {
             QueryWrapper<Topic> wrapper = new QueryWrapper<>();
             wrapper.orderByDesc("createTime");
             List<Topic> list = topicService.list(wrapper);
-            Integer id = getCurrent(session).getId();
+            Integer id = getCurrent(session, userService).getId();
             list.forEach(
                     topic -> {
                         Integer integer = topicService.topicLikeHelp(topic, id);
@@ -156,7 +162,7 @@ public class TopicController {
     public List<Topic> getMyTopic(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            List<Topic> list = topicService.getAllTopicByUserId(getCurrent(session).getId());
+            List<Topic> list = topicService.getAllTopicByUserId(getCurrent(session, userService).getId());
             session.setAttribute("errMsg", null);
             return list;
         } catch (RuntimeException e) {
@@ -201,7 +207,7 @@ public class TopicController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(topicIdRequest);
-                Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session), true);
+                Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session, userService), true);
                 removeReplyByTopic(session, topic, replyService);
                 session.setAttribute("errMsg", null);
                 return topic.getTopicId();
@@ -226,7 +232,7 @@ public class TopicController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(ids);
-                List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session), true);
+                List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session, userService), true);
                 topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
                 session.setAttribute("errMsg", null);
                 return ids;
@@ -251,7 +257,7 @@ public class TopicController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(topicIdRequest);
-                Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session), false);
+                Topic topic = topicService.deleteByAuthorOrNot(topicIdRequest, getCurrent(session, userService), false);
                 removeReplyByTopic(session, topic, replyService);
                 session.setAttribute("errMsg", null);
                 return topic.getTopicId();
@@ -276,7 +282,7 @@ public class TopicController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(ids);
-                List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session), false);
+                List<Topic> topics = topicService.deleteBatchByAuthorOrNot(ids, getCurrent(session, userService), false);
                 topics.forEach(topic -> removeReplyByTopic(session, topic, replyService));
                 session.setAttribute("errMsg", null);
                 return ids;
@@ -300,7 +306,7 @@ public class TopicController {
         HttpSession session = request.getSession();
         try {
             requestFail(searchTitleRequest);
-            getCurrent(session);
+            getCurrent(session, userService);
             List<Topic> topics = topicService.searchTitle(searchTitleRequest);
             session.setAttribute("errMsg", null);
             return topics;

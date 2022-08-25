@@ -79,17 +79,6 @@ public class UserServiceImpl
     }
 
     @Override
-    public User checkCurrentUser(@NotNull User currentUser) throws UserException {
-        try {
-            User getUser = userHelp(currentUser.getId(), this);
-            checkUserInformation(getUser, currentUser);
-            return getUser;
-        }  catch (RuntimeException e) {
-            throw new UserException(e.getMessage(), e);
-        }
-    }
-
-    @Override
     public User updateUserInfo(@NotNull User user) throws UserException {
         try {
             Integer id = user.getId();
@@ -228,6 +217,15 @@ public class UserServiceImpl
     public void monthScoreReset() throws UserException {
         UpdateWrapper<User> wrapper = new UpdateWrapper<>();
         wrapper.set("monthScore", 0);
+        if (!update(wrapper)) {
+            UserEE.USER_SCORE_UPDATE_FAILED.throwE();
+        }
+    }
+
+    @Override
+    public void scoreReset() throws UserException {
+        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+        wrapper.set("score", 0);
         if (!update(wrapper)) {
             UserEE.USER_SCORE_UPDATE_FAILED.throwE();
         }

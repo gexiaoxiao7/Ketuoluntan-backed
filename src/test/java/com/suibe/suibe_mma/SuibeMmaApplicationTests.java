@@ -6,7 +6,6 @@ import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.request.*;
 import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
-import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
 import com.suibe.suibe_mma.util.ControllerUtil;
@@ -16,9 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -35,6 +32,9 @@ class SuibeMmaApplicationTests {
 
     @Autowired
     private TopicService topicService;
+
+    @Resource
+    private RedisTemplate<String, Object> template;
 
     @Test
     void contextLoads() {
@@ -87,18 +87,8 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test6() {
-        String[] split = ("topicId:" + 1).split(":");
-        System.out.println(Arrays.toString(split));
-    }
-
-    @Test
-    void test7() {
-        ArrayList<Integer> integers = new ArrayList<>();
-        integers.add(1);
-        integers.add(4);
-        integers.add(5);
-        List<User> users = userService.listByIds(integers);
-        users.forEach(System.out::println);
+        ControllerUtil.monthlyChange(template, userService);
+        template.opsForHash().put("suibe:mma:2022", "1", 10);
     }
 
 }

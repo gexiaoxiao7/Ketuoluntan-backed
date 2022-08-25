@@ -39,14 +39,6 @@ public interface UserService
     User login(UserLoginRequest userLoginRequest) throws UserException;
 
     /**
-     * 获取当前登录用户
-     * @param currentUser session域中获取的用户信息
-     * @return 用户信息
-     * @throws UserException 数据库中无此用户、用户信息不一致
-     */
-    User checkCurrentUser(User currentUser) throws UserException;
-
-    /**
      * 更新用户信息，除了密码等重要信息
      * @param user 用户需要更新信息
      * @return 用户更新信息后的用户信息
@@ -115,4 +107,10 @@ public interface UserService
      * @throws UserException 月积分更新失败
      */
     void monthScoreReset() throws UserException;
+
+    /**
+     * 积分重置
+     * @throws UserException 积分更新失败
+     */
+    void scoreReset() throws UserException;
 }

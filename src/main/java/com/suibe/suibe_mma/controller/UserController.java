@@ -69,9 +69,10 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userLoginRequest);
-            monthlyChange(template, userService);
             User user = userService.login(userLoginRequest);
             checkUserRole(user, false, false);
+            if (monthlyChange(template, userService) | yearlyChange(template, userService))
+                user = userService.getById(user.getId());
             session.setAttribute(userService.USER_LOGIN_STATE, user);
             session.setAttribute("errMsg", null);
             return user;
@@ -92,9 +93,9 @@ public class UserController {
     public User getCurrentUser(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            User safetyUser = userService.checkCurrentUser(getCurrent(session));
+            User current = getCurrent(session, userService);
             session.setAttribute("errMsg", null);
-            return safetyUser;
+            return current;
         } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
@@ -136,7 +137,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(user);
-            User originUser = getCurrent(session);
+            User originUser = getCurrent(session, userService);
             if (originUser.equals(user)) {
                 throw new RuntimeException("用户信息无变动");
             }
@@ -169,7 +170,7 @@ public class UserController {
     public String logout(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            getCurrent(session);
+            getCurrent(session, userService);
             session.setAttribute(UserService.USER_LOGIN_STATE, null);
             session.setAttribute("errMsg", null);
             return "用户退出成功";
@@ -193,7 +194,7 @@ public class UserController {
             requestFail(userChangePasswordRequest);
             session.setAttribute(
                     UserService.USER_LOGIN_STATE,
-                    userService.changePassword(userChangePasswordRequest, getCurrent(session))
+                    userService.changePassword(userChangePasswordRequest, getCurrent(session, userService))
             );
             return "修改密码成功";
         } catch (RuntimeException e) {
@@ -257,7 +258,7 @@ public class UserController {
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(changeScoreRequest);
-                User current = getCurrent(session, true, false);
+                User current = getCurrent(session, userService, true, false);
                 Integer id = changeScoreRequest.getId();
                 if (current.getId().equals(id)) {
                     throw new RuntimeException("不能为自己改变分数");
@@ -285,7 +286,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userIdRequest);
-            getCurrent(session, true, false);
+            getCurrent(session, userService, true, false);
             User user = userHelp(userIdRequest.getUserId(), userService);
             userService.giveManager(user);
             session.setAttribute("errMsg", null);
@@ -305,7 +306,7 @@ public class UserController {
     public List<User> getAllUsers(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            getCurrent(session);
+            getCurrent(session, userService);
             QueryWrapper<User> wrapper = new QueryWrapper<>();
             wrapper
                     .orderByDesc("score")
@@ -327,7 +328,7 @@ public class UserController {
     public List<User> getAllUsersByMonth(@NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
-            getCurrent(session);
+            getCurrent(session, userService);
             QueryWrapper<User> wrapper = new QueryWrapper<>();
             wrapper
                     .orderByDesc("monthScore")
@@ -353,7 +354,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userIdRequest);
-            getCurrent(session, true, false);
+            getCurrent(session, userService, true, false);
             User user = userHelp(userIdRequest.getUserId(), userService, true, false);
             userService.recaptureManager(user);
             session.setAttribute("errMsg", null);
@@ -361,6 +362,46 @@ public class UserController {
         } catch (RuntimeException e) {
             session.setAttribute("errMsg", e.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * 管理员手动重置月积分
+     * @param request 请求域对象
+     * @return 提示信息
+     */
+    @PostMapping("/monthReset")
+    public String monthReset(@NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            User current = getCurrent(session, userService, true, false);
+            if (monthlyChange(template, userService)) {
+                session.setAttribute(UserService.USER_LOGIN_STATE, userService.getById(current.getId()));
+                return "重置月积分成功";
+            }
+            return "月积分已经重置过了";
+        } catch (RuntimeException e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * 管理员手动重置总积分
+     * @param request 请求域对象
+     * @return 提示信息
+     */
+    @PostMapping("/scoreReset")
+    public String scoreReset(@NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            User current = getCurrent(session, userService, true, false);
+            if (yearlyChange(template, userService)) {
+                session.setAttribute(UserService.USER_LOGIN_STATE, userService.getById(current.getId()));
+                return "重置总积分成功";
+            }
+            return "总积分已经重置过了";
+        } catch (RuntimeException e) {
+            return e.getMessage();
         }
     }
 }
