@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
-import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 import static com.suibe.suibe_mma.util.ServiceUtil.userHelp;
 
 /**

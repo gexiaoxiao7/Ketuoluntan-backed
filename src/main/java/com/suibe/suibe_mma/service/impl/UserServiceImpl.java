@@ -82,10 +82,9 @@ public class UserServiceImpl
     public User updateUserInfo(@NotNull User user) throws UserException {
         try {
             Integer id = user.getId();
-            User getUser = userHelp(id, this);
-            checkUserInformation(getUser, user);
-            getUser.setUpdateTime(null);
-            if (!updateById(getUser)) {
+            userHelp(id, this);
+            user.setUpdateTime(null);
+            if (!updateById(user)) {
                 UserEE.USER_INFO_UPDATE_FAILED.throwE();
             }
             return getById(id);
