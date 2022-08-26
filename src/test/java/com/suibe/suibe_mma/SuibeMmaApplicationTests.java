@@ -18,6 +18,9 @@ import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.suibe.suibe_mma.util.ServiceUtil.encrypt;
+import static com.suibe.suibe_mma.util.ServiceUtil.setNull;
+
 /**
  * 项目测试类
  */
@@ -87,8 +90,16 @@ class SuibeMmaApplicationTests {
 
     @Test
     void test6() {
-        ControllerUtil.monthlyChange(template, userService);
-        template.opsForHash().put("suibe:mma:2022", "1", 10);
+        User user = new User();
+        user.setId(3);
+        user.setUserAccount("123");
+        user.setUserPassword(encrypt("12345"));
+        try {
+            setNull(user, "userAccount");
+            System.out.println(user);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -7,6 +7,7 @@ import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.redis.UserIdAndMonthScore;
 import com.suibe.suibe_mma.domain.redis.UserIdAndScore;
+import com.suibe.suibe_mma.domain.request.ScoreSetRequest;
 import com.suibe.suibe_mma.domain.request.UserIdRequest;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.UserService;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
+import static com.suibe.suibe_mma.util.ServiceUtil.encrypt;
 import static com.suibe.suibe_mma.util.ServiceUtil.userHelp;
 
 /**
@@ -204,5 +206,31 @@ public class ControllerUtil {
             }
         }
         return false;
+    }
+
+    /**
+     * 根据积分重置请求获取用户对象信息
+     * @param scoreSetRequest 积分重置请求类
+     * @param userService 用户服务类
+     * @return 用户信息
+     * @throws RuntimeException 无用户
+     */
+    @NotNull
+    public static User getByScoreRest(
+            @NotNull ScoreSetRequest scoreSetRequest,
+            @NotNull UserService userService) throws RuntimeException {
+        Integer id = scoreSetRequest.getId();
+        Integer userRole = scoreSetRequest.getUserRole();
+        String userPassword = scoreSetRequest.getUserPassword();
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper
+                .eq("id", id)
+                .eq("userRole", userRole)
+                .eq("userPassword", encrypt(userPassword));
+        User user = userService.getOne(wrapper);
+        if (user == null) {
+            throw new RuntimeException("传递信息有误");
+        }
+        return user;
     }
 }

@@ -83,12 +83,13 @@ public class UserServiceImpl
         try {
             Integer id = user.getId();
             userHelp(id, this);
-            user.setUpdateTime(null);
+            setNull(user,
+                    new String[]{"username", "avatarUrl", "gender", "email", "selfIntroduction"});
             if (!updateById(user)) {
                 UserEE.USER_INFO_UPDATE_FAILED.throwE();
             }
             return getById(id);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | IllegalAccessException e) {
             throw new UserException(e.getMessage(), e);
         }
     }
@@ -107,12 +108,12 @@ public class UserServiceImpl
                 score_plus = 0;
             }
             user_plus.setScore(score_plus);
-            user_plus.setUpdateTime(null);
-            if (!updateById(getUser)) {
+            setNull(user_plus, "score");
+            if (!updateById(user_plus)) {
                 UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }
             return getById(id);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | IllegalAccessException e) {
             throw new UserException(e.getMessage(), e);
         }
     }
@@ -196,19 +197,27 @@ public class UserServiceImpl
 
     @Override
     public void giveManager(@NotNull User user) throws UserException {
-        user.setUpdateTime(null);
-        user.setUserRole(1);
-        if (!updateById(user)) {
-            UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
+        try {
+            user.setUserRole(1);
+            setNull(user, "userRole");
+            if (!updateById(user)) {
+                UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
+            }
+        } catch (IllegalAccessException e) {
+            throw new UserException(e.getMessage(), e);
         }
     }
 
     @Override
     public void recaptureManager(@NotNull User user) throws UserException {
-        user.setUpdateTime(null);
-        user.setUserRole(0);
-        if (!updateById(user)) {
-            UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
+        try {
+            user.setUserRole(0);
+            setNull(user, "userRole");
+            if (!updateById(user)) {
+                UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 
@@ -240,12 +249,16 @@ public class UserServiceImpl
     private User changeMonthScore(
             @NotNull User user,
             Integer mouthScore) throws UserException {
-        user.setMonthScore(user.getMonthScore() + mouthScore);
-        user.setUpdateTime(null);
-        if (!updateById(user)) {
-            UserEE.USER_SCORE_UPDATE_FAILED.throwE();
+        try {
+            user.setMonthScore(user.getMonthScore() + mouthScore);
+            setNull(user, "monthScore");
+            if (!updateById(user)) {
+                UserEE.USER_SCORE_UPDATE_FAILED.throwE();
+            }
+            return getById(user.getId());
+        } catch (IllegalAccessException e) {
+            throw new UserException(e.getMessage(), e);
         }
-        return getById(user.getId());
     }
 
 }

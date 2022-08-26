@@ -16,6 +16,7 @@ import javax.servlet.http.HttpSession;
 import java.util.List;
 
 import static com.suibe.suibe_mma.util.ControllerUtil.*;
+import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.userHelp;
 
@@ -367,14 +368,20 @@ public class UserController {
 
     /**
      * 管理员手动重置月积分
+     * @param scoreSetRequest 积分重置请求类
      * @param request 请求域对象
      * @return 提示信息
      */
     @PostMapping("/monthReset")
-    public String monthReset(@NotNull HttpServletRequest request) {
+    public String monthReset(
+            @RequestBody ScoreSetRequest scoreSetRequest,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
+            requestFail(scoreSetRequest);
+            User getUser = getByScoreRest(scoreSetRequest, userService);
             User current = getCurrent(session, userService, true, false);
+            checkUserInformation(getUser, current);
             if (monthlyChange(template, userService)) {
                 session.setAttribute(UserService.USER_LOGIN_STATE, userService.getById(current.getId()));
                 return "重置月积分成功";
@@ -391,10 +398,15 @@ public class UserController {
      * @return 提示信息
      */
     @PostMapping("/scoreReset")
-    public String scoreReset(@NotNull HttpServletRequest request) {
+    public String scoreReset(
+            @RequestBody ScoreSetRequest scoreSetRequest,
+            @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         try {
+            requestFail(scoreSetRequest);
+            User getUser = getByScoreRest(scoreSetRequest, userService);
             User current = getCurrent(session, userService, true, false);
+            checkUserInformation(getUser, current);
             if (yearlyChange(template, userService)) {
                 session.setAttribute(UserService.USER_LOGIN_STATE, userService.getById(current.getId()));
                 return "重置总积分成功";
