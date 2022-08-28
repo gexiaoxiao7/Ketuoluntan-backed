@@ -103,7 +103,7 @@ public class UserServiceImpl
             User getUser = userHelp(id, this);
             checkUserInformation(getUser, user);
             User user_plus = changeMonthScore(getUser, score);
-            int score_plus = getUser.getScore() + score;
+            int score_plus = user_plus.getScore() + score;
             if (score_plus < 0) {
                 score_plus = 0;
             }
