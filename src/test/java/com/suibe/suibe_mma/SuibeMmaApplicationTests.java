@@ -8,18 +8,15 @@ import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
-import com.suibe.suibe_mma.util.ControllerUtil;
+import com.suibe.suibe_mma.util.ServiceUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.suibe.suibe_mma.util.ServiceUtil.encrypt;
-import static com.suibe.suibe_mma.util.ServiceUtil.setNull;
 
 /**
  * 项目测试类
@@ -35,9 +32,6 @@ class SuibeMmaApplicationTests {
 
     @Autowired
     private TopicService topicService;
-
-    @Resource
-    private RedisTemplate<String, Object> template;
 
     @Test
     void contextLoads() {
@@ -95,7 +89,7 @@ class SuibeMmaApplicationTests {
         user.setUserAccount("123");
         user.setUserPassword(encrypt("12345"));
         try {
-            setNull(user, "userAccount");
+            ServiceUtil.notSetNull(user, "userAccount");
             System.out.println(user);
         } catch (IllegalAccessException e) {
             e.printStackTrace();

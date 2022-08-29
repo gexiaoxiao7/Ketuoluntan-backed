@@ -83,7 +83,7 @@ public class UserServiceImpl
         try {
             Integer id = user.getId();
             userHelp(id, this);
-            setNull(user,
+            notSetNull(user,
                     new String[]{"username", "avatarUrl", "gender", "email", "selfIntroduction"});
             if (!updateById(user)) {
                 UserEE.USER_INFO_UPDATE_FAILED.throwE();
@@ -108,7 +108,7 @@ public class UserServiceImpl
                 score_plus = 0;
             }
             user_plus.setScore(score_plus);
-            setNull(user_plus, "score");
+            notSetNull(user_plus, "score");
             if (!updateById(user_plus)) {
                 UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }
@@ -199,7 +199,7 @@ public class UserServiceImpl
     public void giveManager(@NotNull User user) throws UserException {
         try {
             user.setUserRole(1);
-            setNull(user, "userRole");
+            notSetNull(user, "userRole");
             if (!updateById(user)) {
                 UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
             }
@@ -212,7 +212,7 @@ public class UserServiceImpl
     public void recaptureManager(@NotNull User user) throws UserException {
         try {
             user.setUserRole(0);
-            setNull(user, "userRole");
+            notSetNull(user, "userRole");
             if (!updateById(user)) {
                 UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
             }
@@ -251,7 +251,7 @@ public class UserServiceImpl
             Integer mouthScore) throws UserException {
         try {
             user.setMonthScore(user.getMonthScore() + mouthScore);
-            setNull(user, "monthScore");
+            notSetNull(user, "monthScore");
             if (!updateById(user)) {
                 UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }

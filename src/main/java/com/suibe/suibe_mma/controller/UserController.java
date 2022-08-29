@@ -379,7 +379,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(scoreSetRequest);
-            User getUser = getByScoreRest(scoreSetRequest, userService);
+            User getUser = getByScoreReset(scoreSetRequest, userService);
             User current = getCurrent(session, userService, true, false);
             checkUserInformation(getUser, current);
             if (monthlyChange(template, userService)) {
@@ -404,7 +404,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(scoreSetRequest);
-            User getUser = getByScoreRest(scoreSetRequest, userService);
+            User getUser = getByScoreReset(scoreSetRequest, userService);
             User current = getCurrent(session, userService, true, false);
             checkUserInformation(getUser, current);
             if (yearlyChange(template, userService)) {

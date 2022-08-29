@@ -215,4 +215,52 @@ public class ReplyServiceImpl
             throw new ReplyException(e.getMessage(), e);
         }
     }
+
+    @Override
+    public Reply updateReplyInfo(@NotNull Reply reply, User current) throws ReplyException {
+        try {
+            Long replyId = reply.getReplyId();
+            checkId(Reply.class, replyId, this);
+            User user = checkId(User.class, reply.getUserId(), userService);
+            checkUserInformation(user, current);
+            String content = reply.getReplyContent();
+            if (content == null || "".equals(content)) {
+                ReplyEE.REPLY_CONTENT_IS_EMPTY.throwE();
+            }
+            reply = notSetNull(reply, "replyContent");
+            if (!updateById(reply)) {
+                ReplyEE.REPLY_INFO_UPDATE_FAILED.throwE();
+            }
+            return getById(replyId);
+        } catch (RuntimeException | IllegalAccessException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Reply star(Reply reply, User current) throws ReplyException {
+        try {
+            checkUserInformation(current, userService, false, true);
+            boolean flag = false;
+            if ("".equals(reply.getIsStared())) {
+                reply.setIsStared("true");
+                flag = true;
+            } else {
+                reply.setIsStared("");
+            }
+            User user = checkId(User.class, reply.getUserId(), userService);
+            reply = notSetNull(reply, "isStared");
+            if (!updateById(reply)) {
+                ReplyEE.REPLY_IS_STARE_UPDATE_FAILED.throwE();
+            }
+            if (flag) {
+                userService.changeScore(user, 5);
+            } else {
+                userService.changeScore(user, -5);
+            }
+            return getById(reply.getReplyId());
+        } catch (RuntimeException | IllegalAccessException e) {
+            throw new ReplyException(e.getMessage(), e);
+        }
+    }
 }

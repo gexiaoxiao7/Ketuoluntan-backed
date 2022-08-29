@@ -53,7 +53,15 @@ public enum TopicEE {
     /**
      * 无搜索结果
      */
-    TOPIC_SEARCH_TITLE_WRONG("无搜索结果");
+    TOPIC_SEARCH_TITLE_WRONG("无搜索结果"),
+    /**
+     * 题目信息更新失败
+     */
+    TOPIC_INFO_UPDATE_FAILED("题目信息更新失败"),
+    /**
+     * 精选信息更新失败
+     */
+    TOPIC_IS_STARE_UPDATE_FAILED("精选信息更新失败");
 
     /**
      * 异常信息

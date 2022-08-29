@@ -95,4 +95,22 @@ public interface TopicService
      * @throws TopicException 无搜索结果
      */
     List<Topic> searchTitle(SearchTitleRequest searchTitleRequest) throws TopicException;
+
+    /**
+     * 更新题目信息
+     * @param topic 题目信息
+     * @param current 当前用户信息
+     * @return 更新后题目信息
+     * @throws TopicException 更新失败、更新后题目title为空
+     */
+    Topic updateTopicInfo(Topic topic, User current) throws TopicException;
+
+    /**
+     * 管理员取消或设为精选
+     * @param topic 题目信息
+     * @param current 当前用户
+     * @return 题目信息
+     * @throws TopicException 更新失败，不为管理员
+     */
+    Topic star(Topic topic, User current) throws TopicException;
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
+import com.suibe.suibe_mma.domain.able.SetNullable;
 import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.service.UserService;
@@ -14,10 +15,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.suibe.suibe_mma.util.DomainUtil.notSetNullHelp;
 import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 
 /**
@@ -27,7 +30,7 @@ import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 @EqualsAndHashCode(exclude = {"topicLikes", "updateTime"})
 @TableName("mma_topic")
 public class Topic
-        implements Serializable, Likable<Topic>, Checkable<Topic, Long> {
+        implements Serializable, Likable<Topic>, Checkable<Topic, Long>, SetNullable<Topic> {
 
     /**
      * 题目唯一标识
@@ -156,5 +159,15 @@ public class Topic
             TopicEE.TOPIC_IDS_IS_WRONG.throwE();
         }
         return topics;
+    }
+
+    @Override
+    public Topic notSetNull(String column) throws IllegalAccessException {
+        return notSetNullHelp(this, column, "topicId");
+    }
+
+    @Override
+    public Topic notSetNull(String[] columns) throws IllegalAccessException {
+        return notSetNullHelp(this, columns, "topicId");
     }
 }

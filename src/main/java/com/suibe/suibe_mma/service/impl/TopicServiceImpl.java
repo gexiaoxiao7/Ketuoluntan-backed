@@ -24,6 +24,7 @@ import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
 import static com.suibe.suibe_mma.util.ServiceUtil.*;
 
 /**
@@ -178,5 +179,55 @@ public class TopicServiceImpl
             TopicEE.TOPIC_SEARCH_TITLE_WRONG.throwE();
         }
         return list;
+    }
+
+    @Override
+    public Topic updateTopicInfo(
+            @NotNull Topic topic,
+            User current) throws TopicException {
+        try {
+            Long topicId = topic.getTopicId();
+            checkId(Topic.class, topicId, this);
+            User user = checkId(User.class, topic.getUserId(), userService);
+            checkUserInformation(user, current);
+            String topicTitle = topic.getTopicTitle();
+            if (topicTitle == null || "".equals(topicTitle)) {
+                TopicEE.TOPIC_TITLE_IS_SPACE.throwE();
+            }
+            topic = notSetNull(topic, new String[]{"topicTitle", "topicContent"});
+            if (!updateById(topic)) {
+                TopicEE.TOPIC_INFO_UPDATE_FAILED.throwE();
+            }
+            return getById(topicId);
+        } catch (IllegalAccessException | RuntimeException e) {
+            throw new TopicException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Topic star(Topic topic, User current) throws TopicException {
+        try {
+            checkUserInformation(current, userService, false, true);
+            boolean flag = false;
+            if ("".equals(topic.getIsStared())) {
+                topic.setIsStared("true");
+                flag = true;
+            } else {
+                topic.setIsStared("");
+            }
+            User user = checkId(User.class, topic.getUserId(), userService);
+            topic = notSetNull(topic, "isStared");
+            if (!updateById(topic)) {
+                TopicEE.TOPIC_IS_STARE_UPDATE_FAILED.throwE();
+            }
+            if (flag) {
+                userService.changeScore(user, 5);
+            } else {
+                userService.changeScore(user, -5);
+            }
+            return getById(topic.getTopicId());
+        } catch (RuntimeException | IllegalAccessException e) {
+            throw new TopicException(e.getMessage(), e);
+        }
     }
 }

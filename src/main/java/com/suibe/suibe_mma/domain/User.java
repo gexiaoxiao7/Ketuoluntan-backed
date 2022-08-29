@@ -3,6 +3,7 @@ package com.suibe.suibe_mma.domain;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
+import com.suibe.suibe_mma.domain.able.SetNullable;
 import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.UserException;
 import lombok.Data;
@@ -12,6 +13,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+import static com.suibe.suibe_mma.util.DomainUtil.notSetNullHelp;
+
 /**
  * 用户信息类
  */
@@ -19,7 +22,7 @@ import java.util.List;
 @EqualsAndHashCode(exclude = {"score", "updateTime", "monthScore"})
 @TableName("mma_user")
 public class User
-        implements Serializable, Checkable<User, Integer> {
+        implements Serializable, Checkable<User, Integer>, SetNullable<User> {
 
     /**
      * 用户唯一标识
@@ -146,5 +149,15 @@ public class User
             UserEE.USER_IDS_IS_WRONG.throwE();
         }
         return users;
+    }
+
+    @Override
+    public User notSetNull(String column) throws IllegalAccessException {
+        return notSetNullHelp(this, column, "id");
+    }
+
+    @Override
+    public User notSetNull(String[] columns) throws IllegalAccessException {
+        return notSetNullHelp(this, columns, "id");
     }
 }

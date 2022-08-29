@@ -44,17 +44,21 @@ public enum ReplyEE {
      */
     REPLY_TOPIC_REPLYNUM_SUB_FAILED("回复对应题目回复数减少失败"),
     /**
-     * 回复作者积分更新失败
-     */
-    REPLY_USER_SCORE_UPDATE_FAILED("回复作者积分更新失败"),
-    /**
      * 回复id列表为空
      */
     REPLY_IDS_IS_NULL("回复id列表为空"),
     /**
      * 回复id列表无效
      */
-    REPLY_IDS_IS_WRONG("回复id列表无效");
+    REPLY_IDS_IS_WRONG("回复id列表无效"),
+    /**
+     * 回复信息更新失败
+     */
+    REPLY_INFO_UPDATE_FAILED("回复信息更新失败"),
+    /**
+     * 设为精选失败
+     */
+    REPLY_IS_STARE_UPDATE_FAILED("设为精选失败");
 
     /**
      * 异常信息

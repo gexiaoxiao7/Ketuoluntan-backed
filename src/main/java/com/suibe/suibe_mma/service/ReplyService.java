@@ -108,4 +108,22 @@ public interface ReplyService
     void deleteBatch(
             List<Reply> topicReply,
             HttpSession session) throws ReplyException;
+
+    /**
+     * 更新回复信息
+     * @param reply 回复信息
+     * @param current 当前用户信息
+     * @return 更新后回复信息
+     * @throws ReplyException 更新失败，信息不匹配
+     */
+    Reply updateReplyInfo(Reply reply, User current) throws ReplyException;
+
+    /**
+     * 管理员取消或设置精选
+     * @param reply 回复信息
+     * @param current 当前用户
+     * @return 更新后回复信息
+     * @throws ReplyException 精选设置失败，不为管理员
+     */
+    Reply star(Reply reply, User current) throws ReplyException;
 }

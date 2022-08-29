@@ -216,7 +216,7 @@ public class ControllerUtil {
      * @throws RuntimeException 无用户
      */
     @NotNull
-    public static User getByScoreRest(
+    public static User getByScoreReset(
             @NotNull ScoreSetRequest scoreSetRequest,
             @NotNull UserService userService) throws RuntimeException {
         Integer id = scoreSetRequest.getId();

@@ -277,4 +277,52 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 更新回复信息
+     * @param reply 回复信息
+     * @param request 请求域对象
+     * @return 回复信息
+     */
+    @PostMapping("/update")
+    public Reply update(
+            Reply reply,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(reply);
+            User current = getCurrent(session, userService);
+            Reply reply_plus = replyService.updateReplyInfo(reply, current);
+            session.setAttribute("errMsg", null);
+            return reply_plus;
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 管理员设置或取消精选
+     * @param reply 回复信息
+     * @param request 请求域对象
+     * @return 回复信息
+     */
+    @PostMapping("/star")
+    public Reply star(
+            Reply reply,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(reply);
+                User current = getCurrent(session, userService);
+                Reply reply_plus = replyService.star(reply, current);
+                session.setAttribute("errMsg", null);
+                return reply_plus;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
+        }
+    }
+
 }

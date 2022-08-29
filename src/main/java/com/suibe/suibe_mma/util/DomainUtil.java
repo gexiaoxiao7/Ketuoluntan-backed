@@ -3,6 +3,7 @@ package com.suibe.suibe_mma.util;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.able.SetNullable;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.enumeration.UserEE;
@@ -10,7 +11,10 @@ import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.exception.UserException;
 import com.suibe.suibe_mma.service.UserService;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+
+import java.lang.reflect.Field;
 
 import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 
@@ -120,6 +124,56 @@ public class DomainUtil {
             UserService userService,
             boolean isUserSeal) throws RuntimeException {
         checkUserInformation(user, userService, isUserSeal, false);
+    }
+
+    /**
+     * 帮助实体类设置null
+     * @param t 实体类信息
+     * @param column 不设null
+     * @param id 实体类唯一标识名
+     * @param <T> 实体类
+     * @return 实体类信息
+     * @throws IllegalAccessException 不合法异常
+     */
+    @NotNull
+    @Contract("_, _, _ -> param1")
+    public static <T extends SetNullable<T>> T notSetNullHelp(@NotNull T t, String column, String id) throws IllegalAccessException {
+        Field[] fields = t.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            String name = field.getName();
+            if (id.equals(name) || column.equals(name) || "serialVersionUID".equals(name))
+                continue;
+            field.setAccessible(true);
+            field.set(t, null);
+        }
+        return t;
+    }
+
+    /**
+     * 帮助实体类设置null
+     * @param t 实体类信息
+     * @param columns 不设null
+     * @param id 实体类唯一标识名
+     * @param <T> 实体类
+     * @return 实体类信息
+     * @throws IllegalAccessException 不合法异常
+     */
+    @NotNull
+    @Contract("_, _, _ -> param1")
+    public static <T extends SetNullable<T>> T notSetNullHelp(@NotNull T t, String[] columns, String id) throws IllegalAccessException {
+        Field[] fields = t.getClass().getDeclaredFields();
+        L: for (Field field : fields) {
+            String name = field.getName();
+            if (id.equals(name) || "serialVersionUID".equals(name))
+                continue;
+            for (String column : columns) {
+                if (column.equals(name))
+                    continue L;
+            }
+            field.setAccessible(true);
+            field.set(t, null);
+        }
+        return t;
     }
 
     /**

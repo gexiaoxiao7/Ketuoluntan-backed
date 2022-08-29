@@ -7,6 +7,7 @@ import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
+import com.suibe.suibe_mma.domain.able.SetNullable;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.enumeration.UserEE;
@@ -17,12 +18,10 @@ import com.suibe.suibe_mma.mapper.UserMapper;
 import com.suibe.suibe_mma.service.ReplyService;
 import com.suibe.suibe_mma.service.TopicService;
 import com.suibe.suibe_mma.service.UserService;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.DigestUtils;
 
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -131,6 +130,16 @@ public class ServiceUtil {
         }
     }
 
+    /**
+     * 检查id是否有效或为空
+     * @param clazz 类
+     * @param ids 唯一标识
+     * @param service 相关服务类
+     * @param <T> 实体类
+     * @param <R> 主键类
+     * @return 相关信息列表
+     * @throws RuntimeException ids无效或为空
+     */
     public static <T extends Checkable<T, R>, R> List<T> checkId(
             @NotNull Class<T> clazz,
             List<R> ids,
@@ -412,7 +421,10 @@ public class ServiceUtil {
      * @return 用户信息
      * @throws RuntimeException id为空或无效，被封，不是管理员，不是普通用户
      */
-    public static User userHelp(Integer id, UserService userService, boolean isManager, boolean isCommon) throws RuntimeException{
+    public static User userHelp(
+            Integer id,
+            UserService userService,
+            boolean isManager, boolean isCommon) throws RuntimeException{
         User user = checkId(User.class, id, userService);
         checkUserRole(user, isManager, isCommon);
         return user;
@@ -449,49 +461,29 @@ public class ServiceUtil {
     }
 
     /**
-     * 用户不需要信息置null
-     * @param user 用户信息
-     * @param columns 不置null数组
-     * @return 用户信息
-     * @throws IllegalAccessException 不合法异常
-     */
-    @NotNull
-    @Contract("_, _ -> param1")
-    public static User setNull(@NotNull User user, String[] columns) throws IllegalAccessException {
-        Field[] fields = user.getClass().getDeclaredFields();
-        L: for (Field field : fields) {
-            String name = field.getName();
-            if ("id".equals(name) || "serialVersionUID".equals(name))
-                continue;
-            for (String column : columns) {
-                if (column.equals(name))
-                    continue L;
-            }
-            field.setAccessible(true);
-            field.set(user, null);
-        }
-        return user;
-    }
-
-    /**
-     * 用户不需要信息置null
-     * @param user 用户信息
+     * 不需要信息置null
+     * @param t 用户信息
      * @param column 不置null
      * @return 用户信息
      * @throws IllegalAccessException 不合法异常
      */
-    @NotNull
-    @Contract("_, _ -> param1")
-    public static User setNull(@NotNull User user, String column) throws IllegalAccessException {
-        Field[] fields = user.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            String name = field.getName();
-            if (column.equals(name) || "id".equals(name) || "serialVersionUID".equals(name))
-                continue;
-            field.setAccessible(true);
-            field.set(user, null);
-        }
-        return user;
+    public static <T extends SetNullable<T>> T notSetNull(
+            @NotNull T t,
+            String column) throws IllegalAccessException {
+        return t.notSetNull(column);
+    }
+
+    /**
+     * 不需要信息置null
+     * @param t 用户信息
+     * @param columns 不置null
+     * @return 用户信息
+     * @throws IllegalAccessException 不合法异常
+     */
+    public static <T extends SetNullable<T>> T notSetNull(
+            @NotNull T t,
+            String[] columns) throws IllegalAccessException {
+        return t.notSetNull(columns);
     }
 
 }

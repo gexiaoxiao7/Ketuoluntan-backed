@@ -315,4 +315,50 @@ public class TopicController {
             return null;
         }
     }
+
+    /**
+     * 将题目设为精选或取消
+     * @param topic 题目信息
+     * @param request 请求域对象
+     * @return 题目信息
+     */
+    @PostMapping("/star")
+    public Topic star(
+            @RequestBody Topic topic,
+            @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        synchronized (SuibeMmaApplication.class) {
+            try {
+                requestFail(topic);
+                User current = getCurrent(session, userService);
+                Topic topic_plus = topicService.star(topic, current);
+                session.setAttribute("errMsg", null);
+                return topic_plus;
+            } catch (RuntimeException e) {
+                session.setAttribute("errMsg", e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    /**
+     * 题目信息更新
+     * @param topic 题目信息
+     * @param request 请求域对象
+     * @return 题目信息
+     */
+    @PostMapping("/update")
+    public Topic update(Topic topic, @NotNull HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        try {
+            requestFail(topic);
+            User current = getCurrent(session, userService);
+            Topic topic_plus = topicService.updateTopicInfo(topic, current);
+            session.setAttribute("errMsg", null);
+            return topic_plus;
+        } catch (RuntimeException e) {
+            session.setAttribute("errMsg", e.getMessage());
+            return null;
+        }
+    }
 }

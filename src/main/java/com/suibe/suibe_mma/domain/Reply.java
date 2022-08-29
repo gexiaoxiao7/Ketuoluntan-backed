@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
+import com.suibe.suibe_mma.domain.able.SetNullable;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.service.UserService;
@@ -14,10 +15,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.suibe.suibe_mma.util.DomainUtil.notSetNullHelp;
 import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 
 /**
@@ -27,7 +28,7 @@ import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 @EqualsAndHashCode(exclude = {"replyLikes", "updateTime"})
 @TableName("mma_reply")
 public class Reply
-        implements Serializable, Likable<Reply>, Checkable<Reply, Long> {
+        implements Serializable, Likable<Reply>, Checkable<Reply, Long>, SetNullable<Reply> {
 
     /**
      * 回复唯一标识
@@ -151,5 +152,15 @@ public class Reply
             ReplyEE.REPLY_IDS_IS_WRONG.throwE();
         }
         return replies;
+    }
+
+    @Override
+    public Reply notSetNull(String column) throws IllegalAccessException {
+        return notSetNullHelp(this, column, "replyId");
+    }
+
+    @Override
+    public Reply notSetNull(String[] columns) throws IllegalAccessException {
+        return notSetNullHelp(this, columns, "replyId");
     }
 }
