@@ -243,7 +243,7 @@ public class ReplyServiceImpl
             checkUserInformation(current, userService, false, true);
             boolean flag = false;
             if ("".equals(reply.getIsStared())) {
-                reply.setIsStared("true");
+                reply.setIsStared("精选");
                 flag = true;
             } else {
                 reply.setIsStared("");

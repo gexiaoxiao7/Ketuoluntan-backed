@@ -210,7 +210,7 @@ public class TopicServiceImpl
             checkUserInformation(current, userService, false, true);
             boolean flag = false;
             if ("".equals(topic.getIsStared())) {
-                topic.setIsStared("true");
+                topic.setIsStared("精选");
                 flag = true;
             } else {
                 topic.setIsStared("");

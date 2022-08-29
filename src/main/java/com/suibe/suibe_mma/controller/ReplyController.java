@@ -308,7 +308,7 @@ public class ReplyController {
      */
     @PostMapping("/star")
     public Reply star(
-            Reply reply,
+            @RequestBody Reply reply,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
         synchronized (SuibeMmaApplication.class) {
