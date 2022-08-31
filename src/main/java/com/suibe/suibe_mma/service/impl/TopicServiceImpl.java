@@ -64,7 +64,7 @@ public class TopicServiceImpl
             if (!save(topic)) {
                 TopicEE.TOPIC_INSERT_FAILED.throwE();
             }
-            return changeScore(user, 10, userService);
+            return userService.changeScore(user, 10);
         } catch (RuntimeException e) {
             throw new TopicException(e.getMessage(), e);
         }
@@ -171,9 +171,16 @@ public class TopicServiceImpl
         if (searchTitle == null || "".equals(searchTitle)) {
             return list();
         }
-        String[] split = searchTitle.split("");
+        String[] split = searchTitle
+                .replaceAll("(\\p{Punct}|\\p{Space})", "")
+                .split("");
         QueryWrapper<Topic> wrapper = new QueryWrapper<>();
-        Arrays.stream(split).forEach(msg -> wrapper.like("topicTitle", msg).or());
+        Arrays.stream(split).distinct().forEach(msg -> wrapper
+                .like("topicTitle", msg)
+                .or()
+                .like("topicContent", msg)
+                .or()
+        );
         List<Topic> list = list(wrapper);
         if (list.isEmpty()) {
             TopicEE.TOPIC_SEARCH_TITLE_WRONG.throwE();

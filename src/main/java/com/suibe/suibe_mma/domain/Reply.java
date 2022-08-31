@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.List;
 
 import static com.suibe.suibe_mma.util.DomainUtil.notSetNullHelp;
-import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 
 /**
  * 回复类
@@ -108,12 +107,12 @@ public class Reply
             String key,
             IService<Reply> service,
             UserService userService) throws ReplyException {
-        boolean rflag = false;
+        boolean rFlag = false;
         SetOperations<String, Object> operations = template.opsForSet();
         if (flag == -1) {
             operations.add(key, userId);
             replyLikes += 1;
-            rflag = true;
+            rFlag = true;
         } else {
             operations.remove(key, userId);
             replyLikes -= 1;
@@ -122,7 +121,12 @@ public class Reply
         if (!service.updateById(this)) {
             ReplyEE.REPLY_LIKE_UPDATE_FAILED.throwE();
         }
-        userService.update(likeHelper(rflag, this.userId));
+        User user = userService.getById(this.userId);
+        if (rFlag) {
+            userService.changeScore(user, 1);
+        } else {
+            userService.changeScore(user, -1);
+        }
         return service.getById(replyId);
     }
 

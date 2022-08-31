@@ -15,13 +15,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import static com.suibe.suibe_mma.util.DomainUtil.notSetNullHelp;
-import static com.suibe.suibe_mma.util.ServiceUtil.likeHelper;
 
 /**
  * 题目信息类
@@ -115,12 +112,12 @@ public class Topic
             String key,
             IService<Topic> service,
             UserService userService) throws TopicException {
-        boolean tflag = false;
+        boolean tFlag = false;
         SetOperations<String, Object> operations = template.opsForSet();
         if (flag == -1) {
             operations.add(key, userId);
             topicLikes += 1;
-            tflag = true;
+            tFlag = true;
         } else {
             operations.remove(key, userId);
             topicLikes -= 1;
@@ -129,7 +126,12 @@ public class Topic
         if (!service.updateById(this)) {
             TopicEE.TOPIC_LIKE_UPDATE_FAILED.throwE();
         }
-        userService.update(likeHelper(tflag, this.userId));
+        User user = userService.getById(this.userId);
+        if (tFlag) {
+            userService.changeScore(user, 1);
+        } else {
+            userService.changeScore(user, -1);
+        }
         return service.getById(topicId);
     }
 

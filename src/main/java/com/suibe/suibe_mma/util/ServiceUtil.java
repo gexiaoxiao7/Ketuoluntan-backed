@@ -152,27 +152,6 @@ public class ServiceUtil {
     }
 
     /**
-     * 根据flag与userId改变score值
-     * @param flag 改变score的标志
-     * @param userId 用户唯一标识
-     * @return wrapper
-     */
-    @NotNull
-    public static UpdateWrapper<User> likeHelper(
-            boolean flag,
-            Integer userId) {
-        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
-        wrapper.eq("id", userId);
-        if (flag) {
-            wrapper.setSql("score = score + 1");
-        } else {
-            wrapper.setSql("score = score - 1");
-        }
-        wrapper.setSql("updateTime = now()");
-        return wrapper;
-    }
-
-    /**
      * 判断当前登录用户是否点赞题目或回复
      * @param userId 用户唯一标识
      * @param template redis模板类
@@ -357,21 +336,6 @@ public class ServiceUtil {
             Integer score,
             @NotNull UserService userService) throws UserException {
         userService.changeScore(userService.getById(userId), score);
-    }
-
-    /**
-     * 题目改变用户score帮助方法
-     * @param user 用户信息
-     * @param score 改变分数值
-     * @param userService 用户服务类
-     * @return 用户信息
-     * @throws UserException 改变用户score失败
-     */
-    public static User changeScore(
-            User user,
-            Integer score,
-            @NotNull UserService userService) throws UserException {
-        return userService.changeScore(user, score);
     }
 
     /**

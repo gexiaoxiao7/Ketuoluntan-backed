@@ -101,7 +101,11 @@ public enum UserEE {
     /**
      * 该用户未被封
      */
-    USER_NOT_SEAL("该用户未被封");
+    USER_NOT_SEAL("该用户未被封"),
+    /**
+     * 旧密码输入有误
+     */
+    USER_PASSWORD_WRONG("旧密码输入有误");
 
     /**
      * 异常信息

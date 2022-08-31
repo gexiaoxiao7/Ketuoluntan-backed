@@ -83,7 +83,7 @@ public class UserServiceImpl
         try {
             Integer id = user.getId();
             userHelp(id, this);
-            notSetNull(user,
+            user = notSetNull(user,
                     new String[]{"username", "avatarUrl", "gender", "email", "selfIntroduction"});
             if (!updateById(user)) {
                 UserEE.USER_INFO_UPDATE_FAILED.throwE();
@@ -108,7 +108,7 @@ public class UserServiceImpl
                 score_plus = 0;
             }
             user_plus.setScore(score_plus);
-            notSetNull(user_plus, "score");
+            user_plus = notSetNull(user_plus, "score");
             if (!updateById(user_plus)) {
                 UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }
@@ -127,25 +127,31 @@ public class UserServiceImpl
             String oldPassword = request.getOldPassword();
             String newPassword = request.getNewPassword();
             String newCheckPassword = request.getNewCheckPassword();
+            String eOldPassword = encrypt(oldPassword);
+            String eNewPassword = encrypt(newPassword);
             if (checkUserPassword(oldPassword)) {
                 UserEE.USER_OLD_PASSWORD_FORMAT_WRONG.throwE();
             }
             if (checkUserPassword(newPassword)) {
                 UserEE.USER_NEW_PASSWORD_FORMAT_WRONG.throwE();
             }
-            if (oldPassword.equals(newPassword)) {
+            if (eOldPassword.equals(eNewPassword)) {
                 UserEE.USER_NEW_AND_OLD_PASSWORD_SAME.throwE();
             }
             if (!newPassword.equals(newCheckPassword)) {
                 UserEE.USER_PASSWORD_NOT_EQUALS_CHECK_PASSWORD.throwE();
             }
             checkUserInformation(currentUser, this, false);
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("userPassword", eOldPassword).eq("id", id);
+            if (getOne(queryWrapper) == null) {
+                UserEE.USER_PASSWORD_WRONG.throwE();
+            }
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
-                    .set("userPassword", encrypt(newPassword))
+                    .set("userPassword", eNewPassword)
                     .setSql("updateTime = now()")
-                    .eq("id", id)
-                    .eq("userPassword", encrypt(oldPassword));
+                    .eq("id", id);
             if (!update(wrapper)) {
                 UserEE.USER_PASSWORD_CHANGE_FAILED.throwE();
             }
@@ -160,7 +166,11 @@ public class UserServiceImpl
             UserIdRequest userIdRequest,
             User currentUser) throws UserException {
         try {
-            User user = userHelp(userIdRequest.getUserId(), this);
+            Integer userId = userIdRequest.getUserId();
+            User user = userHelp(userId, this);
+            if (currentUser.getId().equals(userId)) {
+                throw new RuntimeException("不能给自己封号");
+            }
             checkUserInformation(currentUser, this, false, true);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
@@ -199,7 +209,7 @@ public class UserServiceImpl
     public void giveManager(@NotNull User user) throws UserException {
         try {
             user.setUserRole(1);
-            notSetNull(user, "userRole");
+            user = notSetNull(user, "userRole");
             if (!updateById(user)) {
                 UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
             }
@@ -212,12 +222,12 @@ public class UserServiceImpl
     public void recaptureManager(@NotNull User user) throws UserException {
         try {
             user.setUserRole(0);
-            notSetNull(user, "userRole");
+            user = notSetNull(user, "userRole");
             if (!updateById(user)) {
                 UserEE.USER_MANAGER_ROLE_CHANGE_FAILED.throwE();
             }
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            throw new UserException(e.getMessage(), e);
         }
     }
 
@@ -251,7 +261,7 @@ public class UserServiceImpl
             Integer mouthScore) throws UserException {
         try {
             user.setMonthScore(user.getMonthScore() + mouthScore);
-            notSetNull(user, "monthScore");
+            user = notSetNull(user, "monthScore");
             if (!updateById(user)) {
                 UserEE.USER_SCORE_UPDATE_FAILED.throwE();
             }

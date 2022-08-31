@@ -18,6 +18,7 @@ import java.util.List;
 import static com.suibe.suibe_mma.util.ControllerUtil.*;
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
+import static com.suibe.suibe_mma.util.ServiceUtil.checkId;
 import static com.suibe.suibe_mma.util.ServiceUtil.userHelp;
 
 /**
@@ -95,6 +96,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             User current = getCurrent(session, userService);
+            session.setAttribute(UserService.USER_LOGIN_STATE, current);
             session.setAttribute("errMsg", null);
             return current;
         } catch (RuntimeException e) {
@@ -116,7 +118,7 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userIdRequest);
-            User user = userHelp(userIdRequest.getUserId(), userService, false, false);
+            User user = checkId(User.class, userIdRequest.getUserId(), userService);
             session.setAttribute("errMsg", null);
             return user;
         } catch (RuntimeException e) {
@@ -141,16 +143,6 @@ public class UserController {
             User originUser = getCurrent(session, userService);
             if (originUser.equals(user)) {
                 throw new RuntimeException("用户信息无变动");
-            }
-            if (!originUser.getScore().equals(user.getScore()) ||
-                    !originUser.getMonthScore().equals(user.getMonthScore())) {
-                throw new RuntimeException("该功能不提供修改积分需求");
-            }
-            if (!originUser.getUserRole().equals(user.getUserRole())) {
-                throw new RuntimeException("该功能不提供修改用户角色需求");
-            }
-            if (user.getUserPassword() != null) {
-                throw new RuntimeException("该功能不提供修改密码需求");
             }
             User userInfo = userService.updateUserInfo(user);
             session.setAttribute("errMsg", null);
