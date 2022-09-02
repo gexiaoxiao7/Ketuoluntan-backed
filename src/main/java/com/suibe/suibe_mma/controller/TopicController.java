@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.suibe.suibe_mma.SuibeMmaApplication;
+import com.suibe.suibe_mma.domain.StringResponse;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.SearchTitleRequest;
@@ -53,7 +54,7 @@ public class TopicController {
      * @return 上传是否成功提示信息
      */
     @PostMapping("/upload")
-    public String upload(
+    public StringResponse upload(
             @RequestBody TopicUploadRequest topicUploadRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -65,9 +66,13 @@ public class TopicController {
                         UserService.USER_LOGIN_STATE,
                         topicService.upload(topicUploadRequest)
                 );
-                return "上传成功";
+                StringResponse stringResponse = new StringResponse();
+                stringResponse.setMessage("上传成功");
+                return stringResponse;
             } catch (RuntimeException e) {
-                return e.getMessage();
+                StringResponse stringResponse = new StringResponse();
+                stringResponse.setMessage(e.getMessage());
+                return stringResponse;
             }
         }
     }

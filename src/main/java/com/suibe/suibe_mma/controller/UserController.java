@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.suibe.suibe_mma.SuibeMmaApplication;
+import com.suibe.suibe_mma.domain.StringResponse;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.*;
 import com.suibe.suibe_mma.service.UserService;
@@ -47,13 +48,17 @@ public class UserController {
      * @return 相关信息
      */
     @PostMapping("/register")
-    public String register(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public StringResponse register(@RequestBody UserRegisterRequest userRegisterRequest) {
         try {
             requestFail(userRegisterRequest);
             userService.register(userRegisterRequest);
-            return "注册成功";
+            StringResponse stringResponse = new StringResponse();
+            stringResponse.setMessage("注册成功");
+            return stringResponse;
         } catch (RuntimeException e) {
-            return e.getMessage();
+            StringResponse stringResponse = new StringResponse();
+            stringResponse.setMessage(e.getMessage());
+            return stringResponse;
         }
     }
 
@@ -179,7 +184,7 @@ public class UserController {
      * @return 提示信息
      */
     @PostMapping("/changePassword")
-    public String changePassword(
+    public StringResponse changePassword(
             @RequestBody UserChangePasswordRequest userChangePasswordRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -189,9 +194,13 @@ public class UserController {
                     UserService.USER_LOGIN_STATE,
                     userService.changePassword(userChangePasswordRequest, getCurrent(session, userService))
             );
-            return "修改密码成功";
+            StringResponse stringResponse = new StringResponse();
+            stringResponse.setMessage("修改密码成功");
+            return stringResponse;
         } catch (RuntimeException e) {
-            return e.getMessage();
+            StringResponse stringResponse = new StringResponse();
+            stringResponse.setMessage(e.getMessage());
+            return stringResponse;
         }
     }
 
@@ -365,7 +374,7 @@ public class UserController {
      * @return 提示信息
      */
     @PostMapping("/monthReset")
-    public String monthReset(
+    public StringResponse monthReset(
             @RequestBody ScoreSetRequest scoreSetRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -374,13 +383,18 @@ public class UserController {
             User getUser = getByScoreReset(scoreSetRequest, userService);
             User current = getCurrent(session, userService, true, false);
             checkUserInformation(getUser, current);
+            StringResponse stringResponse = new StringResponse();
             if (monthlyChange(template, userService)) {
                 session.setAttribute(UserService.USER_LOGIN_STATE, userService.getById(current.getId()));
-                return "重置月积分成功";
+                stringResponse.setMessage("重置月积分成功");
+                return stringResponse;
             }
-            return "月积分已经重置过了";
+            stringResponse.setMessage("月积分已经重置过了");
+            return stringResponse;
         } catch (RuntimeException e) {
-            return e.getMessage();
+            StringResponse stringResponse = new StringResponse();
+            stringResponse.setMessage(e.getMessage());
+            return stringResponse;
         }
     }
 
@@ -390,7 +404,7 @@ public class UserController {
      * @return 提示信息
      */
     @PostMapping("/scoreReset")
-    public String scoreReset(
+    public StringResponse scoreReset(
             @RequestBody ScoreSetRequest scoreSetRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -399,13 +413,18 @@ public class UserController {
             User getUser = getByScoreReset(scoreSetRequest, userService);
             User current = getCurrent(session, userService, true, false);
             checkUserInformation(getUser, current);
+            StringResponse stringResponse = new StringResponse();
             if (yearlyChange(template, userService)) {
                 session.setAttribute(UserService.USER_LOGIN_STATE, userService.getById(current.getId()));
-                return "重置总积分成功";
+                stringResponse.setMessage("重置总积分成功");
+                return stringResponse;
             }
-            return "总积分已经重置过了";
+            stringResponse.setMessage("总积分已经重置过了");
+            return stringResponse;
         } catch (RuntimeException e) {
-            return e.getMessage();
+            StringResponse stringResponse = new StringResponse();
+            stringResponse.setMessage(e.getMessage());
+            return stringResponse;
         }
     }
 }

@@ -2,6 +2,7 @@ package com.suibe.suibe_mma.controller;
 
 import com.suibe.suibe_mma.SuibeMmaApplication;
 import com.suibe.suibe_mma.domain.Reply;
+import com.suibe.suibe_mma.domain.StringResponse;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
 import com.suibe.suibe_mma.domain.request.ReplyIdRequest;
@@ -45,7 +46,7 @@ public class ReplyController {
      * @return 提示信息
      */
     @PostMapping("/writeReply")
-    public String writeReply(
+    public StringResponse writeReply(
             @RequestBody ReplyWriteRequest replyWriteRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -57,9 +58,13 @@ public class ReplyController {
                         UserService.USER_LOGIN_STATE,
                         replyService.writeReply(replyWriteRequest, current)
                 );
-                return "回复成功";
+                StringResponse stringResponse = new StringResponse();
+                stringResponse.setMessage("回复成功");
+                return stringResponse;
             } catch (RuntimeException e) {
-                return e.getMessage();
+                StringResponse stringResponse = new StringResponse();
+                stringResponse.setMessage(e.getMessage());
+                return stringResponse;
             }
         }
     }
