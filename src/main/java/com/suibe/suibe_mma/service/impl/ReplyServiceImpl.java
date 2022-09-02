@@ -240,7 +240,7 @@ public class ReplyServiceImpl
     @Override
     public Reply star(Reply reply, User current) throws ReplyException {
         try {
-            checkUserInformation(current, userService, false, true);
+            checkUserInformation(current, userService, false, true, false);
             boolean flag = false;
             if ("".equals(reply.getIsStared())) {
                 reply.setIsStared("精选");

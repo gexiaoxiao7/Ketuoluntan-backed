@@ -214,7 +214,7 @@ public class TopicServiceImpl
     @Override
     public Topic star(Topic topic, User current) throws TopicException {
         try {
-            checkUserInformation(current, userService, false, true);
+            checkUserInformation(current, userService, false, true, false);
             boolean flag = false;
             if ("".equals(topic.getIsStared())) {
                 topic.setIsStared("精选");

@@ -171,7 +171,7 @@ public class UserServiceImpl
             if (currentUser.getId().equals(userId)) {
                 throw new RuntimeException("不能给自己封号");
             }
-            checkUserInformation(currentUser, this, false, true);
+            checkUserInformation(currentUser, this, false, true, false);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .eq("id", user.getId())
@@ -191,7 +191,7 @@ public class UserServiceImpl
             User currentUser) throws UserException {
         try {
             User user = userHelp(userIdRequest.getUserId(), this, true);
-            checkUserInformation(currentUser, this, false, true);
+            checkUserInformation(currentUser, this, false, true, false);
             UpdateWrapper<User> wrapper = new UpdateWrapper<>();
             wrapper
                     .eq("id", user.getId())

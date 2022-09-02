@@ -100,10 +100,11 @@ public class DomainUtil {
             @NotNull User user,
             UserService userService,
             boolean isUserSeal,
-            boolean isManager) throws RuntimeException {
+            boolean isManager,
+            boolean isCommon) throws RuntimeException {
         User getUser = checkId(User.class, user.getId(), userService);
         if (!isUserSeal) {
-            checkUserRole(getUser, isManager, !isManager);
+            checkUserRole(getUser, isManager, isCommon);
         } else {
             if (getUser.getUserRole() != 2) {
                 UserEE.USER_NOT_SEAL.throwE();
@@ -123,7 +124,7 @@ public class DomainUtil {
             @NotNull User user,
             UserService userService,
             boolean isUserSeal) throws RuntimeException {
-        checkUserInformation(user, userService, isUserSeal, false);
+        checkUserInformation(user, userService, isUserSeal, false, false);
     }
 
     /**
