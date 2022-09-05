@@ -49,14 +49,13 @@ public class UserController {
      */
     @PostMapping("/register")
     public StringResponse register(@RequestBody UserRegisterRequest userRegisterRequest) {
+        StringResponse stringResponse = new StringResponse();
         try {
             requestFail(userRegisterRequest);
             userService.register(userRegisterRequest);
-            StringResponse stringResponse = new StringResponse();
             stringResponse.setMessage("注册成功");
             return stringResponse;
         } catch (RuntimeException e) {
-            StringResponse stringResponse = new StringResponse();
             stringResponse.setMessage(e.getMessage());
             return stringResponse;
         }
@@ -356,8 +355,11 @@ public class UserController {
         HttpSession session = request.getSession();
         try {
             requestFail(userIdRequest);
-            getCurrent(session, userService, true, false);
+            User current = getCurrent(session, userService, true, false);
             User user = userHelp(userIdRequest.getUserId(), userService, true, false);
+            if (user.getId().equals(current.getId())) {
+                throw new RuntimeException("不能取消自己的管理员权限");
+            }
             userService.recaptureManager(user);
             session.setAttribute("errMsg", null);
             return user.getId();

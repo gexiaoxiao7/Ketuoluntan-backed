@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.suibe.suibe_mma.util.DomainUtil.checkUserInformation;
-import static com.suibe.suibe_mma.util.DomainUtil.checkUserRole;
 import static com.suibe.suibe_mma.util.ServiceUtil.encrypt;
 import static com.suibe.suibe_mma.util.ServiceUtil.userHelp;
 
@@ -69,8 +68,7 @@ public class ControllerUtil {
             throw new RuntimeException("当前用户未登录");
         }
         User user = (User) o;
-        User getUser = userHelp(user.getId(), userService);
-        checkUserRole(getUser, isManager, isCommon);
+        User getUser = userHelp(user.getId(), userService, isManager, isCommon);
         checkUserInformation(getUser, user);
         return getUser;
     }

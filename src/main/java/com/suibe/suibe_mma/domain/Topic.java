@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
-import com.suibe.suibe_mma.domain.able.SetNullable;
+import com.suibe.suibe_mma.domain.able.NotSetNullable;
 import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.exception.TopicException;
 import com.suibe.suibe_mma.service.UserService;
@@ -27,7 +27,7 @@ import static com.suibe.suibe_mma.util.DomainUtil.notSetNullHelp;
 @EqualsAndHashCode(exclude = {"topicLikes", "updateTime"})
 @TableName("mma_topic")
 public class Topic
-        implements Serializable, Likable<Topic>, Checkable<Topic, Long>, SetNullable<Topic> {
+        implements Serializable, Likable<Topic>, Checkable<Topic, Long>, NotSetNullable<Topic> {
 
     /**
      * 题目唯一标识

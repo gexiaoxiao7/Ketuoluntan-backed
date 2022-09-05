@@ -3,7 +3,7 @@ package com.suibe.suibe_mma.util;
 import com.suibe.suibe_mma.domain.Reply;
 import com.suibe.suibe_mma.domain.Topic;
 import com.suibe.suibe_mma.domain.User;
-import com.suibe.suibe_mma.domain.able.SetNullable;
+import com.suibe.suibe_mma.domain.able.NotSetNullable;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.enumeration.UserEE;
@@ -138,7 +138,7 @@ public class DomainUtil {
      */
     @NotNull
     @Contract("_, _, _ -> param1")
-    public static <T extends SetNullable<T>> T notSetNullHelp(@NotNull T t, String column, String id) throws IllegalAccessException {
+    public static <T extends NotSetNullable<T>> T notSetNullHelp(@NotNull T t, String column, String id) throws IllegalAccessException {
         Field[] fields = t.getClass().getDeclaredFields();
         for (Field field : fields) {
             String name = field.getName();
@@ -161,7 +161,7 @@ public class DomainUtil {
      */
     @NotNull
     @Contract("_, _, _ -> param1")
-    public static <T extends SetNullable<T>> T notSetNullHelp(@NotNull T t, String[] columns, String id) throws IllegalAccessException {
+    public static <T extends NotSetNullable<T>> T notSetNullHelp(@NotNull T t, String[] columns, String id) throws IllegalAccessException {
         Field[] fields = t.getClass().getDeclaredFields();
         L: for (Field field : fields) {
             String name = field.getName();

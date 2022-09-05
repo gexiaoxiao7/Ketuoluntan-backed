@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
-import com.suibe.suibe_mma.domain.able.SetNullable;
+import com.suibe.suibe_mma.domain.able.NotSetNullable;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.exception.ReplyException;
 import com.suibe.suibe_mma.service.UserService;
@@ -27,7 +27,7 @@ import static com.suibe.suibe_mma.util.DomainUtil.notSetNullHelp;
 @EqualsAndHashCode(exclude = {"replyLikes", "updateTime"})
 @TableName("mma_reply")
 public class Reply
-        implements Serializable, Likable<Reply>, Checkable<Reply, Long>, SetNullable<Reply> {
+        implements Serializable, Likable<Reply>, Checkable<Reply, Long>, NotSetNullable<Reply> {
 
     /**
      * 回复唯一标识

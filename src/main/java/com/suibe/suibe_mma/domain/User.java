@@ -3,7 +3,7 @@ package com.suibe.suibe_mma.domain;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.suibe.suibe_mma.domain.able.Checkable;
-import com.suibe.suibe_mma.domain.able.SetNullable;
+import com.suibe.suibe_mma.domain.able.NotSetNullable;
 import com.suibe.suibe_mma.enumeration.UserEE;
 import com.suibe.suibe_mma.exception.UserException;
 import lombok.Data;
@@ -22,7 +22,7 @@ import static com.suibe.suibe_mma.util.DomainUtil.notSetNullHelp;
 @EqualsAndHashCode(exclude = {"score", "updateTime", "monthScore"})
 @TableName("mma_user")
 public class User
-        implements Serializable, Checkable<User, Integer>, SetNullable<User> {
+        implements Serializable, Checkable<User, Integer>, NotSetNullable<User> {
 
     /**
      * 用户唯一标识

@@ -58,6 +58,7 @@ public class TopicController {
             @RequestBody TopicUploadRequest topicUploadRequest,
             @NotNull HttpServletRequest request) {
         HttpSession session = request.getSession();
+        StringResponse stringResponse = new StringResponse();
         synchronized (SuibeMmaApplication.class) {
             try {
                 requestFail(topicUploadRequest);
@@ -66,11 +67,9 @@ public class TopicController {
                         UserService.USER_LOGIN_STATE,
                         topicService.upload(topicUploadRequest)
                 );
-                StringResponse stringResponse = new StringResponse();
                 stringResponse.setMessage("上传成功");
                 return stringResponse;
             } catch (RuntimeException e) {
-                StringResponse stringResponse = new StringResponse();
                 stringResponse.setMessage(e.getMessage());
                 return stringResponse;
             }
