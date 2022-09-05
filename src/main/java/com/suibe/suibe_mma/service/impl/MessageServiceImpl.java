@@ -167,6 +167,9 @@ public class MessageServiceImpl
                 MessageEE.MESSAGE_CAN_NOT_SAME.throwE();
             }
             String messageContent = writeRequest.getMessageContent();
+            if (messageContent == null || "".equals(messageContent)) {
+                MessageEE.MESSAGE_CONTENT_EMPTY.throwE();
+            }
             Message message = new Message();
             message.setSendId(sendId);
             message.setReceiveId(receiveId);

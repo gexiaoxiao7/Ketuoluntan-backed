@@ -10,6 +10,7 @@ import com.suibe.suibe_mma.service.MessageService;
 import com.suibe.suibe_mma.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -106,7 +107,7 @@ public class MessageController {
     @PostMapping("/read")
     public Message read(
             @NotNull HttpServletRequest request,
-            MessageIdRequest messageIdRequest) {
+            @RequestBody MessageIdRequest messageIdRequest) {
         HttpSession session = request.getSession();
         try {
             requestFail(messageIdRequest);
@@ -129,7 +130,7 @@ public class MessageController {
     @PostMapping("/report")
     public StringResponse report(
             @NotNull HttpServletRequest request,
-            MessageReportRequest messageReportRequest) {
+            @RequestBody MessageReportRequest messageReportRequest) {
         HttpSession session = request.getSession();
         StringResponse stringResponse = new StringResponse();
         try {
@@ -153,7 +154,7 @@ public class MessageController {
     @PostMapping("/write")
     public StringResponse write(
             @NotNull HttpServletRequest request,
-            MessageWriteRequest writeRequest) {
+            @RequestBody MessageWriteRequest writeRequest) {
         HttpSession session = request.getSession();
         StringResponse stringResponse = new StringResponse();
         try {
@@ -215,7 +216,7 @@ public class MessageController {
     @PostMapping("/delete")
     public StringResponse delete(
             @NotNull HttpServletRequest request,
-            Message message) {
+            @RequestBody Message message) {
         HttpSession session = request.getSession();
         StringResponse stringResponse = new StringResponse();
         try {
