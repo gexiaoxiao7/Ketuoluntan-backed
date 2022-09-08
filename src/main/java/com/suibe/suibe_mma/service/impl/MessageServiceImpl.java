@@ -105,7 +105,7 @@ public class MessageServiceImpl
                 MessageEE.MESSAGE_CONTENT_EMPTY.throwE();
             }
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("userRole", 2);
+            queryWrapper.eq("userRole", 1);
             List<User> managers = userService.list(queryWrapper);
 
             managers.stream().filter(user -> !user.getId().equals(sendId)).forEach(user -> {
