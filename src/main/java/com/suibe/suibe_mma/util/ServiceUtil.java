@@ -2,10 +2,7 @@ package com.suibe.suibe_mma.util;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.suibe.suibe_mma.domain.Message;
-import com.suibe.suibe_mma.domain.Reply;
-import com.suibe.suibe_mma.domain.Topic;
-import com.suibe.suibe_mma.domain.User;
+import com.suibe.suibe_mma.domain.*;
 import com.suibe.suibe_mma.domain.able.Checkable;
 import com.suibe.suibe_mma.domain.able.Likable;
 import com.suibe.suibe_mma.domain.able.NotSetNullable;
@@ -13,15 +10,9 @@ import com.suibe.suibe_mma.enumeration.MessageEE;
 import com.suibe.suibe_mma.enumeration.ReplyEE;
 import com.suibe.suibe_mma.enumeration.TopicEE;
 import com.suibe.suibe_mma.enumeration.UserEE;
-import com.suibe.suibe_mma.exception.MessageException;
-import com.suibe.suibe_mma.exception.ReplyException;
-import com.suibe.suibe_mma.exception.TopicException;
-import com.suibe.suibe_mma.exception.UserException;
+import com.suibe.suibe_mma.exception.*;
 import com.suibe.suibe_mma.mapper.UserMapper;
-import com.suibe.suibe_mma.service.MessageService;
-import com.suibe.suibe_mma.service.ReplyService;
-import com.suibe.suibe_mma.service.TopicService;
-import com.suibe.suibe_mma.service.UserService;
+import com.suibe.suibe_mma.service.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.DigestUtils;
@@ -490,6 +481,36 @@ public class ServiceUtil {
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new MessageException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 信息删除帮助方法
+     * @param sign 信息类
+     * @param flag 判断当前用户是发送者或接收者标志
+     * @param deleteFlag 对应当前用户来说是否已经删除标志
+     * @param column 对应操作字段
+     * @param service 信息服务类
+     * @throws SignException 删除失败
+     */
+    public static void signDelete(
+            Sign sign,
+            boolean flag,
+            boolean deleteFlag,
+            String column,
+            SignService service) throws SignException {
+        try {
+            if (flag && !deleteFlag) {
+                Field field = Sign.class.getDeclaredField(column);
+                field.setAccessible(true);
+                field.set(sign, true);
+                notSetNull(sign, column);
+                if (!service.updateById(sign)) {
+                    MessageEE.MESSAGE_DELETE_FAILED.throwE();
+                }
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new SignException(e.getMessage(), e);
         }
     }
 }
