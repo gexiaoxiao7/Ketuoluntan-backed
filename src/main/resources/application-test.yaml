@@ -15,6 +15,9 @@ spring:
       initial-size: 10
       max-active: 20
       min-idle: 3
+  jpa:
+    hibernate:
+      ddl-auto: update
   session:
     timeout: 86400
 

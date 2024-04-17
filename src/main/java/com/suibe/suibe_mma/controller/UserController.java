@@ -310,7 +310,7 @@ public class UserController {
             getCurrent(session, userService);
             QueryWrapper<User> wrapper = new QueryWrapper<>();
             wrapper
-                    .orderByDesc("score")
+//                    .orderByDesc("score")
                     .orderByAsc("createTime");
             session.setAttribute("errMsg", null);
             return userService.list(wrapper);

@@ -52,7 +52,7 @@ public class UserServiceImpl
             UserEE.USER_ACCOUNT_EXISTS.throwE();
         }
         user.setUserPassword(encrypt(userPassword));
-        if ("21076027".equals(userAccount) || "21076028".equals(userAccount)) {
+        if ("21076027".equals(userAccount) || "21076028".equals(userAccount) || "gexiaoxiao".equals(userAccount)) {
             user.setUserRole(1);
         }
         if (!save(user)) {
